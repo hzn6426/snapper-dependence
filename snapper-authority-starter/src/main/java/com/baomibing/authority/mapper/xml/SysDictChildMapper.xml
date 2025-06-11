@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.baomibing.authority.mapper.SysDictChildMapper">
+
+    <update id="updateDictChildDeleteByIds">
+        UPDATE sys_dict_child
+        SET be_delete = 1
+        WHERE id IN
+            <foreach collection="childIds" index="index" item="item" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+    </update>
+
+	<!-- 根据父编码获取子项列表 -->
+	<select id="listByParentCode" resultType="com.baomibing.authority.entity.SysDictChild">
+		SELECT child.id, child.dict_code, child.dict_name, child.parent_id, child.`state`, child.be_lock
+		FROM sys_dict_child child 
+		INNER JOIN sys_dictionary dict ON child.parent_id = dict.id 
+		WHERE dict.dict_code = #{parentCode,jdbcType=CHAR} AND child.be_delete = '0'
+		ORDER BY child.priority ASC
+	</select>
+	
+	<!-- 根据父编码列表获取子项列表-->
+	<select id="listByParentCodes" resultType="com.baomibing.authority.entity.SysDictChild">
+		SELECT child.id, child.dict_code, child.dict_name, child.parent_id, child.`state`, child.be_lock, dict.dict_code as parent_code
+		FROM sys_dict_child child 
+		INNER JOIN sys_dictionary dict ON child.parent_id = dict.id 
+		WHERE child.be_delete = '0' AND dict.dict_code IN 
+		<foreach collection="parentCodes" index="index" item="item" open="(" separator="," close=")">
+        	#{item}
+        </foreach>
+	</select>
+</mapper>

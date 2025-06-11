@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.baomibing.authority.mapper.SysBusinessPermMapper">
+
+
+    <!-- 根据菜单ID列表获取资源菜单列表-关联资源 -->
+    <select id="getByAction" resultType="com.baomibing.authority.entity.SysBusinessPerm">
+        SELECT   bp.id, bp.menu_id, bp.button_id, bp.perm_name, bp.perm_action, bp.req_url, bp.req_method, bp.note,bp.action_ref
+        FROM sys_business_perm bp
+        WHERE bp.perm_action = #{action}
+    </select>
+
+</mapper>

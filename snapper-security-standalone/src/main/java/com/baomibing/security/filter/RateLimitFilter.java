@@ -1,0 +1,216 @@
+package com.baomibing.security.filter;
+
+import com.alibaba.fastjson.JSONObject;
+import com.baomibing.security.rule.RateLimitRule;
+import com.baomibing.tool.constant.RedisKeyConstant;
+import com.baomibing.tool.constant.Strings;
+import com.baomibing.tool.constant.UserHeaderConstant;
+import com.baomibing.tool.constant.WebConstant;
+import com.baomibing.tool.limit.*;
+import com.baomibing.tool.util.Checker;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
+import io.github.bucket4j.Bucket;
+import org.springframework.http.HttpStatus;
+
+import javax.servlet.FilterChain;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.CopyOnWriteArraySet;
+
+/**
+ * RateLimitFilter
+ *
+ * @author zening 2024/10/9 14:28
+ * @version 1.0.0
+ **/
+public class RateLimitFilter extends BaseFilter {
+
+    private Map<String, RateLimitRule> ruleMap = Maps.newHashMap();
+
+    private static final CopyOnWriteArraySet<String> whites = new CopyOnWriteArraySet<>(Sets.newHashSet(WebConstant.API_TOKEN_URL, WebConstant.API_USER_LOG_URL,
+            WebConstant.HMAC_API_PREFIX, WebConstant.THIRD_API_PREFIX, WebConstant.API_DEPATMENT_CHANGE, WebConstant.API_USER_DEPARTMENTS, WebConstant.API_USER_CURRENT,
+            WebConstant.API_USER_BUTTONS, WebConstant.API_USER_ADMIN_MENUS, WebConstant.API_USER_MENUS, WebConstant.SOCKET_CLIENT, WebConstant.API_VALIDATE_USER_FOR_DEPARTMENTS,
+            WebConstant.API_LIMIT_REFRESH_CACHE,
+            WebConstant.TENANT_API_TOKEN_URL, WebConstant.TENANT_API_USER_LOG_URL,
+            WebConstant.TENANT_API_DEPATMENT_CHANGE, WebConstant.TENANT_API_USER_DEPARTMENTS, WebConstant.TENANT_API_USER_CURRENT,
+            WebConstant.TENANT_API_USER_BUTTONS, WebConstant.TENANT_API_USER_ADMIN_MENUS, WebConstant.TENANT_API_USER_MENUS
+            ));
+    private boolean matchWhiteList(String url) {
+        return whites.stream().anyMatch(w -> pathMatch.match(w, url));
+    }
+
+    private  final String LIMIT_KEY_PREFIX = "_LIMIT_KEY_";
+
+    @Override
+    public void addWhites(Set<String> urls) {
+        if (Checker.beNotEmpty(urls)) {
+            whites.addAll(urls);
+        }
+    }
+
+    private RateLimitRule createIfNotExist(GateLimit limit) {
+        RateLimitRule cacheLimit = ruleMap.get(limit.getId());
+        if (Checker.beNull(cacheLimit) || !cacheLimit.getUuid().equals(limit.getUuid())) {
+            cacheLimit = new RateLimitRule(limit);
+            ruleMap.put(limit.getId(), cacheLimit);
+        }
+        return cacheLimit;
+    }
+
+
+    @Override
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+        String url = request.getRequestURI();
+
+
+        if (matchWhiteList(url)) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        List<GateLimit> limits = Lists.newArrayList();
+        Object cache = cacheService.get(RedisKeyConstant.KEY_RATE_LIMIT);
+        if (Checker.beNotNull(cache) && Checker.beNotEmpty(cache.toString())) {
+            limits = JSONObject.parseArray(cache.toString(), GateLimit.class);
+        }
+        if (Checker.beEmpty(limits)) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        for (GateLimit limit : limits) {
+            RateLimitRule rule = createIfNotExist(limit);
+            String key = matchKey(request, limit);
+            if (Checker.beNotEmpty(key)) {
+                Bucket bucket = rule.getBucket(key);
+                if (bucket.tryConsume(1)) {
+                    filterChain.doFilter(request, response);
+                    return;
+                } else {
+                    response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
+                    return;
+                }
+            }
+        }
+        filterChain.doFilter(request, response);
+
+    }
+
+
+    private String matchKey(HttpServletRequest request, GateLimit limit) {
+        String url = request.getRequestURI();
+        String method = request.getMethod();
+        String userId = request.getHeader(UserHeaderConstant.USER_ID);
+        String ip = request.getHeader(UserHeaderConstant.USER_IP);
+        String utag = request.getHeader(UserHeaderConstant.USER_TAG);
+        String stag = request.getHeader(UserHeaderConstant.USER_SYSTEM_TAG);
+
+        String tstate = request.getHeader(UserHeaderConstant.USER_TENANT_STATE);
+        String rank = request.getHeader(UserHeaderConstant.USER_TENANT_RANK);
+
+        boolean matchUser = true;
+        boolean matchUtags = true;
+        boolean matchSTags = true;
+        boolean matchRequest = true;
+        boolean matchTuser = true;
+
+
+        String limitKey = LIMIT_KEY_PREFIX;
+        String ALL = "ALL";
+        if (GateLimitRuleEnum.ALL.name().equals(limit.getRuleUser())) {
+            limitKey += ALL;
+        } else if (GateLimitRuleEnum.CUSTOMER.name().equals(limit.getRuleUser())) {
+            List<GateLimitUser> users = limit.getUsers();
+            users = Checker.beNotEmpty(users) ? users : Lists.newArrayList();
+            matchUser = users.stream().anyMatch(u -> u.getUserId().equals(userId));
+            if (matchUser) {
+                limitKey += userId;
+            }
+        } else if (GateLimitRuleEnum.SPECIAL.name().equals(limit.getRuleUser())) {
+            limitKey += userId;
+        }
+
+        if (GateLimitRuleEnum.ALL.name().equals(limit.getRuleTuser())) {
+            limitKey += ALL;
+        } else if (GateLimitRuleEnum.STATE.name().equals(limit.getRuleTuser())) {
+            List<GateLimitTuser> users = limit.getTusers();
+            users = Checker.beNotEmpty(users) ? users : Lists.newArrayList();
+            matchTuser = users.stream().anyMatch(u -> u.getLimitValue().equals(tstate));
+            if (matchTuser) {
+                limitKey += tstate;
+            }
+        } else if (GateLimitRuleEnum.RANK.name().equals(limit.getRuleTuser())) {
+            List<GateLimitTuser> users = limit.getTusers();
+            users = Checker.beNotEmpty(users) ? users : Lists.newArrayList();
+            matchTuser = users.stream().anyMatch(u -> u.getLimitValue().equals(rank));
+            if (matchTuser) {
+                limitKey += tstate;
+            }
+        }
+
+        if (GateLimitRuleEnum.ALL.name().equals(limit.getRuleUserTag())) {
+            limitKey += Strings.UNDERSCORE + ALL;
+        } else if (GateLimitRuleEnum.CUSTOMER.name().equals(limit.getRuleUserTag())) {
+            List<GateLimitUtag> utags = limit.getUtags();
+            utags = Checker.beNotEmpty(utags) ? utags : Lists.newArrayList();
+            matchUtags = utags.stream().anyMatch(ut -> ut.getTagCode().equals(utag));
+            if (matchUtags) {
+                limitKey += Strings.UNDERSCORE + utag;
+            }
+        }
+
+        if (GateLimitRuleEnum.ALL.name().equals(limit.getRuleSystemTag())) {
+            limitKey += Strings.UNDERSCORE + ALL;
+        } else if (GateLimitRuleEnum.CUSTOMER.name().equals(limit.getRuleSystemTag())) {
+            List<GateLimitStag> stags = limit.getStags();
+            stags = Checker.beNotEmpty(stags) ? stags : Lists.newArrayList();
+            matchSTags = stags.stream().anyMatch(st -> stag.contains(st.getSystemTag()));
+            if (matchSTags) {
+                limitKey += Strings.UNDERSCORE + stag;
+            }
+        }
+
+        if (GateLimitRuleEnum.ALL.name().equals(limit.getRuleUrl())) {
+            limitKey += Strings.UNDERSCORE + ALL;
+        } else if (GateLimitRuleEnum.CUSTOMER.name().equals(limit.getRuleUrl())) {
+            List<GateLimitRequest> requests = limit.getRequests();
+            GateLimitRequest limitRequest = requests.stream().filter(r -> {
+                boolean urlMatch = true;
+                if (Checker.beNotEmpty(r.getUrl())) {
+                    urlMatch = pathMatch.match(r.getUrl(), url);
+                }
+                boolean methodMatch = true;
+                if (Checker.beNotEmpty(r.getMethod())) {
+                    methodMatch = method.equalsIgnoreCase(r.getMethod());
+                }
+                boolean ipMatch = true;
+                if (Checker.beNotEmpty(r.getIp())) {
+                    ipMatch = Arrays.asList(r.getIp().split(Strings.COMMA)).contains(ip);
+                }
+                return urlMatch && methodMatch && ipMatch;
+            }).findFirst().orElse(null);
+            if (Checker.beNotNull(limitRequest)) {
+                String murl = Checker.beNotEmpty(limitRequest.getUrl()) ? url + Strings.UNDERSCORE  : "";
+                String mmethod = Checker.beNotEmpty(limitRequest.getMethod()) ? method + Strings.UNDERSCORE : "";
+                String mip = Checker.beNotEmpty(limitRequest.getIp()) ? ip : "";
+                String mprefix = Checker.beNotEmpty(murl) && Checker.beNotEmpty(mmethod) && Checker.beNotEmpty(mip) ? Strings.UNDERSCORE : "";
+                limitKey += mprefix + murl + method + mip;
+            } else {
+                matchRequest = false;
+            }
+        }
+        if (LIMIT_KEY_PREFIX.equals(limitKey)) {
+//            return false;
+            return Strings.EMPTY;
+        }
+        return matchUser && matchUtags && matchSTags && matchRequest && matchTuser ? limitKey : Strings.EMPTY;
+    }
+}

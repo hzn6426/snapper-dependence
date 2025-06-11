@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.baomibing.authority.mapper.SysUserLogMapper">
+
+    <sql id="search_where_sql">
+        <where>
+            <if test="createUserCnName != null and  createUserCnName != ''">
+                AND create_user_cn_name LIKE CONCAT('%',#{createUserCnName},'%')
+            </if>
+            <if test="exchangeName != null and  exchangeName != ''">
+                AND exchange_name LIKE CONCAT('%',#{exchangeName},'%')
+            </if>
+            <if test="state != null and  state != ''">
+                AND state = #{state}
+            </if>
+            <if test="startTime != null">
+                AND DATE_FORMAT(exchange_time,'%Y-%m-%d %H:%i:%s') &gt;= DATE_FORMAT(#{startTime},'%Y-%m-%d %H:%i:%s')
+            </if>
+            <if test="endTime != null">
+                AND DATE_FORMAT(exchange_time,'%Y-%m-%d %H:%i:%s') &lt;= DATE_FORMAT(#{endTime},'%Y-%m-%d %H:%i:%s')
+            </if>
+        </where>
+    </sql>
+    <!-- 根据条件分页查询按钮及API信息 -->
+    <select id="searchLog" resultType="com.baomibing.authority.entity.SysUserLog">
+        SELECT id,exchange_url ,exchange_method,exchange_name,exchange_time,state,ip_address,create_user_cn_name,
+        execute_method,execute_timer,execute_module_name,log_type_code,browser,os,exchange_param,system_tag
+        FROM sys_user_log
+        <include refid="search_where_sql"/>
+        ORDER BY create_time DESC
+        LIMIT #{offset}, #{pageSize}
+    </select>
+
+    <!-- 根据条件分页查询按钮及API信息的总条数 -->
+    <select id="countLog" resultType="java.lang.Integer">
+        SELECT COUNT(1)
+        FROM sys_user_log
+        <include refid="search_where_sql"/>
+    </select>
+</mapper>

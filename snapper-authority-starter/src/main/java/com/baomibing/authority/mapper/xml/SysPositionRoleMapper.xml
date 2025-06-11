@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.baomibing.authority.mapper.SysPositionRoleMapper">
+
+    
+    <!-- 根据职位ID获取用户角色列表 -->
+    <select id="listRolesByPosition" parameterType="java.lang.String" resultType="com.baomibing.authority.entity.SysRole">
+        SELECT r.id, r.role_name 
+        FROM sys_role AS r 
+        INNER JOIN sys_position_role pr ON r.id = pr.role_id
+        WHERE pr.position_id =  #{positionId,jdbcType=CHAR}
+    </select>
+    
+</mapper>

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.baomibing.authority.mapper.SysUserPositionMapper">
+
+	<!-- 根据用户ID，组织ID获取用户组织职位对应的角色列表 -->
+	<select id="listPositionRoleIdsByUserAndGroup" resultType="java.lang.String">
+		SELECT spr.role_id
+		FROM sys_position sp
+		INNER JOIN sys_user_position sup ON sp.id = sup.position_id  AND sp.org_id = sup.group_id
+		INNER JOIN sys_position_role spr ON spr.position_id = sp.id
+		WHERE sup.user_id = #{userId, jdbcType=CHAR} AND sp.org_id = #{groupId, jdbcType=CHAR}
+	</select>
+	
+	
+	<!-- 根据用户ID，组织ID获取用户组织对应的职位 -->
+	<select id="listPositionByUserAndGroup" resultType="com.baomibing.authority.entity.SysPosition">
+		SELECT sp.id, sp.post_name, sp.perm_scope,sp.state,sp.perm_scope,sp.be_manager,sp.note
+		FROM sys_position sp
+		LEFT JOIN sys_user_position sup ON sp.id = sup.position_id AND sp.org_id = sup.group_id
+		WHERE sup.user_id = #{userId, jdbcType=CHAR} AND sp.org_id = #{groupId, jdbcType=CHAR}
+	</select>
+</mapper>

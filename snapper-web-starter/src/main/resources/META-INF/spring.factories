@@ -1,0 +1,3 @@
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+com.baomibing.web.config.MvcConfigurer,\
+com.baomibing.web.config.WrapFilterConfiguration

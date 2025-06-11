@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<included>
+    <springProperty scope="context" name="log.path" source="logging.file.path" defaultValue="../logs"/>
+    <springProperty scope="context" name="spring.application.name" source="spring.application.name"/>
+    <springProperty scope="context" name="spring.profiles.active" source="spring.profiles.active"/>
+    <springProperty scope="context" name="logging.level.console" source="logging.level.console" defaultValue="INFO"/>
+    <springProperty scope="context" name="server.port" source="server.port"/>
+    <!-- 彩色日志 参考 org/springframework/boot/logging/logback/defaults.xml -->
+    <conversionRule conversionWord="color" converterClass="org.springframework.boot.logging.logback.ColorConverter"/>
+
+    <!-- 彩色日志格式-用于开发 -->
+    <springProperty scope="context" name="console-pattern" source="logging.console-pattern"
+                    defaultValue="%color([${spring.application.name}:${server.port}]){cyan} %color([%X{x-trace-id}]-[%X{x-user-id}]){red} %color(%d{yyyy-MM-dd HH:mm:ss.SSS}){blue} %color([%thread]){orange} %-5level %logger{36} - %msg%n"/>
+    <!--  普通日志格式-用于生产  -->
+    <springProperty scope="context" name="default-pattern" source="logging.default-pattern"
+                    defaultValue="[${spring.application.name}:${server.port}] [%X{x-trace-id}]-[%X{x-user-id}] %d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"/>
+
+    <contextName>${spring.application.name}-logback</contextName>
+
+<!--    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>-->
+<!--    <jmxConfigurator/>-->
+
+
+    <!-- 控制台实时输出，采用高亮语法，用于开发环境 -->
+    <appender name="CONSOLE_APPENDER" class="ch.qos.logback.core.ConsoleAppender">
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter"/>
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <Pattern>${console-pattern}</Pattern>
+        </encoder>
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>INFO</level>
+        </filter>
+    </appender>
+    <appender name="ASYNC_CONSOLE_APPENDER" class="ch.qos.logback.classic.AsyncAppender">
+        <discardingThreshold>0</discardingThreshold>
+        <queueSize>256</queueSize>
+        <appender-ref ref="CONSOLE_APPENDER"/>
+    </appender>
+
+    <!-- 项目的所有日志 -->
+    <appender name="ROOT_APPENDER" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${log.path}/${spring.application.name}/%d{yyyy-MM}/root-%d{yyyy-MM-dd}-%i.log
+            </fileNamePattern>
+            <maxFileSize>100MB</maxFileSize>
+            <maxHistory>10</maxHistory>
+            <totalSizeCap>1GB</totalSizeCap>
+        </rollingPolicy>
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <pattern>${default-pattern}</pattern>
+        </encoder>
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>DEBUG</level>
+<!--            <onMatch>ACCEPT</onMatch>-->
+<!--            <onMismatch>DENY</onMismatch>-->
+        </filter>
+    </appender>
+    <appender name="ASYNC_ROOT_APPENDER" class="ch.qos.logback.classic.AsyncAppender">
+        <discardingThreshold>0</discardingThreshold>
+        <queueSize>256</queueSize>
+        <appender-ref ref="ROOT_APPENDER"/>
+    </appender>
+
+
+    <!-- 埋点包的日志 -->
+    <appender name="POINT_APPENDER" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${log.path}/${spring.application.name}/%d{yyyy-MM}/point-%d{yyyy-MM-dd}-%i.log</fileNamePattern>
+            <maxFileSize>100MB</maxFileSize>
+            <maxHistory>10</maxHistory>
+            <totalSizeCap>1GB</totalSizeCap>
+        </rollingPolicy>
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <Pattern>${default-pattern}</Pattern>
+        </encoder>
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>DEBUG</level>
+<!--            <onMatch>ACCEPT</onMatch>-->
+<!--            <onMismatch>DENY</onMismatch>-->
+        </filter>
+    </appender>
+    <appender name="ASYNC_POINT_APPENDER" class="ch.qos.logback.classic.AsyncAppender">
+        <discardingThreshold>0</discardingThreshold>
+        <queueSize>256</queueSize>
+        <appender-ref ref="POINT_APPENDER"/>
+    </appender>
+
+    <!--  SQL打印日志  -->
+    <appender name="SQL_APPENDER" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${log.path}/${spring.application.name}/%d{yyyy-MM}/sql-%d{yyyy-MM-dd}-%i.log</fileNamePattern>
+            <maxFileSize>100MB</maxFileSize>
+            <maxHistory>10</maxHistory>
+            <totalSizeCap>1GB</totalSizeCap>
+        </rollingPolicy>
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <Pattern>${default-pattern}</Pattern>
+        </encoder>
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>DEBUG</level>
+<!--            <onMatch>ACCEPT</onMatch>-->
+<!--            <onMismatch>DENY</onMismatch>-->
+        </filter>
+    </appender>
+    <appender name="ASYNC_SQL_APPENDER" class="ch.qos.logback.classic.AsyncAppender">
+        <discardingThreshold>0</discardingThreshold>
+        <queueSize>256</queueSize>
+        <appender-ref ref="SQL_APPENDER"/>
+    </appender>
+
+</included>

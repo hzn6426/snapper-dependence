@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.baomibing.authority.mapper.SysUserUsetMapper">
+
+    
+    <!-- 根据角色ID获取与组织关联的用户ID信息 -->
+    <select id="listGroupUsersByUset" parameterType="java.lang.String" resultType="com.baomibing.authority.entity.SysUser">
+        SELECT u.id,  u.user_no,u.user_real_en_name, CONCAT(GROUP_CONCAT(ur.org_id)) group_id
+        FROM sys_user_uset AS ur
+        INNER JOIN sys_user u ON u.id = ur.user_id
+        WHERE ur.uset_id =  #{usetId}
+        GROUP BY u.id, u.user_no,u.user_real_en_name
+    </select>
+    
+    <!-- 根据组织和用户列出用户组列表 -->
+    <select id="listUsetsByGroupAndUser" parameterType="java.lang.String" resultType="com.baomibing.authority.entity.SysUset">
+        SELECT  u.id, u.uset_name, u.state from sys_uset u INNER JOIN sys_user_uset uu ON u.id = uu.uset_id
+        WHERE uu.user_id =  #{userId,jdbcType=CHAR} AND uu.org_id = #{orgId,jdbcType=CHAR}
+    </select>
+
+    <!-- 根据用户ID，组织ID获取用户组对应的角色列表 -->
+    <select id="listUsetRoleIdsByUserAndGroup" resultType="java.lang.String">
+        SELECT sur.role_id
+        FROM sys_uset su
+        INNER JOIN sys_user_uset suu ON su.id = suu.uset_id
+        INNER JOIN sys_uset_role sur ON sur.uset_id = su.id
+        WHERE suu.user_id = #{userId, jdbcType=CHAR} AND suu.org_id = #{groupId, jdbcType=CHAR}
+    </select>
+</mapper>

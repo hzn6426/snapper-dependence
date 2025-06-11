@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.baomibing.authority.mapper.SysGroupMapper">
+
+	<!-- 获取最大ID -->
+	<select id="getMaxId" resultType="java.lang.String">
+		SELECT MAX(t.id)
+		FROM sys_group AS t 
+	</select>
+	
+	<!-- 把右值大于父节点左值的节点的右值加上2 -->
+	<update id="updateAddParentRight" parameterType="java.lang.Integer">
+		UPDATE sys_group SET grht = grht + 2 WHERE grht > #{gleft, jdbcType=INTEGER}
+	</update>
+	
+	<!-- 把左值大于父节点左值的节点的左值加上2 -->
+	<update id="updateAddParentLeft" parameterType="java.lang.Integer">
+		UPDATE sys_group SET glft = glft + 2 WHERE glft > #{gleft, jdbcType=INTEGER}
+	</update>
+	
+	<!-- 把右节点大于某个值的右节点值减左右节点差值+1 -->
+	<update id="updateSubtractNodeRight" >
+		UPDATE sys_group SET grht = grht - #{gvalue, jdbcType=INTEGER} WHERE grht > #{gright, jdbcType=INTEGER}
+	</update>
+	
+	<!-- 把右节点大于某个值的左节点值减左右节点差值+1 -->
+	<update id="updateSubtractNodeLeft" >
+		UPDATE sys_group SET glft = glft - #{gvalue, jdbcType=INTEGER} WHERE glft > #{gright, jdbcType=INTEGER}
+	</update>
+	
+	<!-- 删除左值在本节点之间的节点 -->
+	<delete id="deleteBetweenLeftRight" >
+		DELETE FROM sys_group WHERE glft BETWEEN #{gleft, jdbcType=INTEGER} AND #{gright, jdbcType=INTEGER}
+	</delete>
+
+<!--	&lt;!&ndash; 获取组织区间内的所有子组织 &ndash;&gt;-->
+<!--	<select id="listChildsByGroupIntervals" resultType="com.baomibing.authority.entity.SysGroup">-->
+<!--		SELECT g.id, g.grht, g.glft, g.group_name, g.parent_id, g.group_level, g.group_type-->
+<!--		FROM sys_group AS g-->
+<!--		<where>-->
+<!--		<choose>-->
+<!--			<when test="groups != null and groups.size() > 0">-->
+<!--				<foreach collection="groups" index="index" item="item" open="(" separator="or" close=")">-->
+<!--		             g.glft &gt;= #{item.left, jdbcType=INTEGER} AND g.grht &lt;= #{item.rght, jdbcType=INTEGER}       -->
+<!--		        </foreach>-->
+<!--		    </when>-->
+<!--		    <otherwise>-->
+<!--				AND 1 = 0-->
+<!--			</otherwise>-->
+<!--		</choose>-->
+<!--        </where>-->
+<!--	</select>-->
+
+	<select id="listGroupsByUser" resultType="com.baomibing.authority.entity.SysGroup">
+		SELECT g.id, g.grht, g.glft, g.group_name, g.parent_id, g.group_level
+		FROM sys_user_group as ug
+		left join sys_group AS g
+		on ug.group_id = g.id
+		where ug.user_id = #{uid, jdbcType=VARCHAR}
+		and g.be_deleted = 0
+	</select>
+	
+	<select id="getParentCompanyById" resultType="com.baomibing.authority.entity.SysGroup">
+		SELECT DISTINCT g.id, g.group_level, g.group_name 
+		FROM sys_group cg 
+		LEFT JOIN sys_group g ON cg.parent_id LIKE CONCAT(g.id, '%') AND g.group_level = 1 
+		WHERE cg.id = #{id, jdbcType=CHAR}
+	</select>
+</mapper>

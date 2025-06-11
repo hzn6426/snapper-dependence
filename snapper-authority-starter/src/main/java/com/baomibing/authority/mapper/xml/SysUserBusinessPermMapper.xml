@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.baomibing.authority.mapper.SysUserBusinessPermMapper">
+
+    <!-- 根据用户及请求的方法和URL获取读业务权限范围-->
+    <select id="getUserBusinessPermScopeByMethodAndUrl" resultType="java.lang.String">
+		SELECT ubp.perm_scope AS op_type
+	    FROM sys_business_perm bp
+		INNER JOIN sys_user_business_perm ubp ON bp.id = ubp.perm_id
+		WHERE ubp.user_id = #{userId, jdbcType=CHAR} AND ubp.org_id = #{orgId, jdbcType=CHAR}
+		AND bp.req_url  = #{url,jdbcType=CHAR} AND bp.req_method = #{method,jdbcType=CHAR}
+	</select>
+	
+	<!-- 根据用户及对应的权限动作Action获取业务权限范围 -->
+	<select id="getUserBusinessPermScopeByAction" resultType="java.lang.String">
+		SELECT ubp.perm_scope AS op_type
+	    FROM sys_business_perm bp
+		INNER JOIN sys_user_business_perm ubp ON bp.id = ubp.perm_id
+		WHERE ubp.user_id = #{userId, jdbcType=CHAR} AND ubp.org_id = #{orgId, jdbcType=CHAR}
+		AND bp.perm_action = #{action, jdbcType=CHAR}
+	</select>
+
+
+</mapper>

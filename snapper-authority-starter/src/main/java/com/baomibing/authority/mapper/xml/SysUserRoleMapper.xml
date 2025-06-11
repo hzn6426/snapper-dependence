@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.baomibing.authority.mapper.SysUserRoleMapper">
+
+    <!-- 根据组织ID和用户名获取用户角色列表 -->
+    <select id="listRolesByGroupAndUserName" parameterType="java.lang.String" resultType="com.baomibing.authority.entity.SysRole">
+        SELECT r.id,  r.role_name 
+        FROM sys_role AS r 
+        INNER JOIN sys_user_role ur ON r.id = ur.role_id
+        INNER JOIN sys_user u ON ur.user_id = u.id
+        WHERE u.user_no =  #{userName,jdbcType=CHAR} AND ur.org_id = #{orgId,jdbcType=CHAR}
+    </select>
+    
+    <!-- 根据组织ID和用户ID删除角色用户关系 -->
+    <delete id="deleteByGroupAndUser" parameterType="java.lang.String">
+        DELETE FROM sys_user_role  WHERE user_id = #{userId,jdbcType=CHAR} AND org_id = #{orgId,jdbcType=CHAR}
+    </delete>
+    
+     <!-- 根据组织ID和用户ID列表删除角色用户关系 -->
+    <delete id="deleteByGroupAndUsers">
+        DELETE FROM sys_user_role  WHERE org_id = #{orgId,jdbcType=CHAR} AND user_id  IN
+		<foreach collection="userIds" index="index" item="item" open="(" separator="," close=")">
+            #{item}       
+        </foreach>
+    </delete>
+    
+    <!-- 根据组织ID和用户名获取用户角色列表 -->
+    <select id="listRolesByGroupAndUser" parameterType="java.lang.String" resultType="com.baomibing.authority.entity.SysRole">
+        SELECT r.id, r.role_name,r.be_default,r.state
+        FROM sys_role AS r 
+        INNER JOIN sys_user_role ur ON r.id = ur.role_id
+        WHERE ur.user_id =  #{userId,jdbcType=CHAR} AND ur.org_id = #{orgId,jdbcType=CHAR}
+    </select>
+    
+    <!-- 删除用户id 角色id列表对应的用户角色关系 -->
+    <delete id="deleteByMapUserIdAndRoleIdList" parameterType="java.util.Map">
+        DELETE FROM sys_user_role  WHERE user_id = #{userId,jdbcType=CHAR} AND org_id = #{orgId,jdbcType=CHAR} AND role_id in
+        <foreach collection="roleIdList" index="index" item="item" open="(" separator="," close=")">
+            #{item}       
+        </foreach>
+    </delete>
+    
+    <!-- 根据角色id列表和用户id列表封装的map删除用户角色关系映射 -->
+    <delete id="deleteByMapRoleIdAndUserIdList" parameterType="java.util.Map">
+        DELETE FROM sys_user_role  WHERE role_id = #{roleId,jdbcType=CHAR} AND org_id = #{orgId,jdbcType=CHAR} AND user_id in
+        <foreach collection="userIdList" index="index" item="item" open="(" separator="," close=")">
+            #{item}       
+        </foreach>
+    </delete>
+
+    <!-- 根据组织ID和角色ID获取用户 -->
+    <select id="listUserByGroupAndRole" parameterType="java.lang.String" resultType="com.baomibing.authority.entity.SysUser">
+        SELECT r.id,r.user_no,r.user_real_en_name,r.user_passwd
+        FROM sys_user_role AS ur
+        INNER JOIN sys_user r ON r.id = ur.user_id
+        WHERE ur.role_id = #{roleId} AND ur.org_id = #{orgId,jdbcType=CHAR}
+    </select>
+    
+    <!-- 根据角色id删除组织对应的角色用户关系 -->
+    <delete id="deleteByGroupAndRole" parameterType="java.lang.String">
+        DELETE FROM sys_user_role  WHERE role_id = #{roleId,jdbcType=CHAR} AND org_id = #{orgId,jdbcType=CHAR}
+    </delete>
+    
+    <!-- 根据角色id删除组织对应的角色用户关系 -->
+    <delete id="deleteByRole" parameterType="java.lang.String">
+        DELETE FROM sys_user_role  WHERE role_id = #{roleId,jdbcType=CHAR}
+    </delete>
+    
+     <!-- 根据角色id列表删除角色组织用户关系 -->
+    <delete id="deleteByGroupAndRoles">
+        DELETE FROM sys_user_role  WHERE org_id = #{orgId,jdbcType=CHAR} AND role_id  IN
+		<foreach collection="roleIdList" index="index" item="item" open="(" separator="," close=")">
+            #{item}       
+        </foreach>
+    </delete>
+    
+    <!-- 删除角色ID及组织列表对应的用户组织关系 -->
+    <delete id="deleteByRoleAndGroups">
+        DELETE FROM sys_user_role  WHERE role_id = #{roleId,jdbcType=CHAR} AND org_id  IN
+		<foreach collection="groupIdList" index="index" item="item" open="(" separator="," close=")">
+            #{item}       
+        </foreach>
+    </delete>
+    
+    <!-- 根据角色ID获取与组织关联的用户ID信息 -->
+    <select id="listGroupUsersByRole" parameterType="java.lang.String" resultType="com.baomibing.authority.entity.SysUser">
+        SELECT u.id,  u.user_no,u.user_real_en_name, CONCAT(GROUP_CONCAT(ur.org_id)) group_id
+        FROM sys_user_role AS ur
+        INNER JOIN sys_user u ON u.id = ur.user_id
+        WHERE ur.role_id =  #{rid}
+        GROUP BY u.id, u.user_no,u.user_real_en_name
+    </select>
+</mapper>

@@ -1,0 +1,5 @@
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+com.baomibing.core.config.AopConfiguration,\
+com.baomibing.core.config.CoreConfiguration,\
+com.baomibing.core.config.AsyncThreadPoolConfiguration,\
+com.baomibing.core.config.TransactionConfiguration

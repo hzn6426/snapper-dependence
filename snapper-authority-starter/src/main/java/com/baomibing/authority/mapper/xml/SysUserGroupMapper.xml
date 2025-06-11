@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.baomibing.authority.mapper.SysUserGroupMapper">
+
+    <!-- 根据用户ID，获取用户组织列表 -->
+    <select id="listByUser" resultType="com.baomibing.authority.entity.SysUserGroup">
+		SELECT ug.id, ug.group_id, sg.group_name,g.id AS company_id,g.group_name AS company_name
+		FROM sys_user_group ug
+		LEFT JOIN sys_group sg ON sg.id = ug.group_id
+		LEFT JOIN sys_group g ON sg.parent_id LIKE CONCAT(g.id, '%')
+		AND g.group_level = 1
+		WHERE ug.user_id = #{userId, jdbcType=CHAR}
+	</select>
+
+    <!-- 根据组织ID，获取用户组织列表 -->
+    <select id="listItAndChilldByGroup" resultType="com.baomibing.authority.entity.SysUserGroup">
+		SELECT ug.id, ug.group_id
+		FROM sys_user_group ug WHERE ug.group_id LIKE CONCAT(#{groupId, jdbcType=CHAR}, '%')
+	</select>
+
+    <select id="listGroupIdByUserNo" resultType="java.lang.String">
+        SELECT g.group_id FROM
+        sys_user_group g
+        LEFT JOIN sys_user u
+        ON g.user_id = u.id
+        WHERE u.user_no = #{userNo}
+    </select>
+
+    <select id="listByUserNos" resultType="com.baomibing.authority.entity.SysUserGroup">
+        SELECT g.id, g.user_id, g.group_id, g.org_id, u.user_no
+        FROM sys_user_group g
+        LEFT JOIN sys_user u ON g.user_id = u.id
+        WHERE u.user_no in
+        <foreach collection="userNos" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+</mapper>

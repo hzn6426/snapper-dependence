@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.baomibing.authority.mapper.SysPositionUserEntrustMapper">
+
+    
+    <!-- 根据职位ID获取职位委托的组织中用户列表 -->
+    <select id="listEntrustUsersByPosition" resultType="com.baomibing.authority.entity.SysUser">
+        SELECT u.id, u.user_no, u.user_real_cn_name, ug.group_id
+		FROM sys_position_user_entrust pue
+		INNER JOIN sys_user u ON u.id = pue.user_id
+		INNER JOIN sys_user_group ug ON u.id = ug.user_id
+		WHERE pue.position_id = #{positionId, jdbcType=CHAR}
+    </select>
+    
+</mapper>

@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.baomibing.authority.mapper.SysButtonMapper">
+
+    <!-- 根据条件分页查询按钮及API信息 -->
+    <select id="listButtonAndApiByMenu" resultType="com.baomibing.authority.entity.SysButton">
+        SELECT b.id, b.be_unauth,b.be_lock, b.button_name, b.menu_id, b.sub_menu, b.note, api.req_method, api.req_url, sbp.id as perm_id, sbp.perm_action, sbp.action_ref
+        FROM sys_button b
+        LEFT JOIN sys_resource_api api ON b.id = api.resource_id AND api.resource_type = 'BUTTON'
+        LEFT JOIN sys_business_perm sbp on sbp.button_id = b.id
+        <where>
+            <if test="menuId != null and  menuId != ''">
+                AND b.menu_id = #{menuId, jdbcType=VARCHAR}
+            </if>
+            <if test="keyword != null and  keyword != ''">
+                AND (b.id LIKE CONCAT('%',#{keyword,jdbcType=CHAR},'%')
+                    OR b.button_name LIKE CONCAT('%',#{keyword,jdbcType=CHAR},'%')
+                    OR api.req_url LIKE CONCAT('%',#{keyword,jdbcType=CHAR},'%')
+                    OR sbp.perm_action LIKE CONCAT('%',#{keyword,jdbcType=CHAR},'%')
+                    OR sbp.action_ref LIKE CONCAT('%',#{keyword,jdbcType=CHAR},'%'))
+            </if>
+
+        </where>
+        ORDER BY b.id desc
+        LIMIT #{offset,jdbcType=INTEGER}, #{limit,jdbcType=INTEGER}
+    </select>
+
+    <!-- 根据条件分页查询按钮及API信息的总条数 -->
+    <select id="countButtonAndApiByMenu" resultType="java.lang.Integer">
+        SELECT COUNT(1)
+        FROM sys_button b
+        LEFT JOIN sys_resource_api api ON b.id = api.resource_id AND api.resource_type = 'BUTTON'
+        LEFT JOIN sys_business_perm sbp on sbp.button_id = b.id
+        <where>
+            <if test="menuId != null and  menuId != ''">
+                AND b.menu_id = #{menuId, jdbcType=VARCHAR}
+            </if>
+            <if test="keyword != null and  keyword != ''">
+                AND (b.id LIKE CONCAT('%',#{keyword,jdbcType=CHAR},'%')
+                OR b.button_name LIKE CONCAT('%',#{keyword,jdbcType=CHAR},'%')
+                OR api.req_url LIKE CONCAT('%',#{keyword,jdbcType=CHAR},'%')
+                OR sbp.perm_action LIKE CONCAT('%',#{keyword,jdbcType=CHAR},'%')
+                OR sbp.action_ref LIKE CONCAT('%',#{keyword,jdbcType=CHAR},'%'))
+            </if>
+
+        </where>
+    </select>
+
+    <!--  根据关键字查询按钮  -->
+    <select id="listButtonByKeyWork" resultType="com.baomibing.authority.entity.SysButton">
+        SELECT distinct b.id, b.be_unauth, b.button_name, b.menu_id, m.menu_name as sub_menu, b.note, api.req_method, api.req_url, sbp.id as perm_id, sbp.perm_action, sbp.action_ref
+        FROM sys_button b
+        LEFT JOIN sys_menu m ON m.id = b.menu_id
+        INNER JOIN sys_resource_api api ON b.id = api.resource_id AND api.resource_type = 'BUTTON'
+        LEFT JOIN sys_business_perm sbp on sbp.button_id = b.id
+        <where>
+            <if test="keyword != null and  keyword != ''">
+                AND (b.id LIKE CONCAT('%',#{keyword,jdbcType=CHAR},'%')
+                OR b.button_name LIKE CONCAT('%',#{keyword,jdbcType=CHAR},'%')
+                OR api.req_url LIKE CONCAT('%',#{keyword,jdbcType=CHAR},'%')
+                OR sbp.perm_action LIKE CONCAT('%',#{keyword,jdbcType=CHAR},'%')
+                OR sbp.action_ref LIKE CONCAT('%',#{keyword,jdbcType=CHAR},'%'))
+            </if>
+
+        </where>
+        ORDER BY b.id desc
+        LIMIT 5
+    </select>
+
+    <!--  根据按钮ID获取按钮及API信息  -->
+    <select id="getButtonAndApiById" resultType="com.baomibing.authority.entity.SysButton">
+        SELECT distinct b.id, b.be_unauth, b.button_name, b.menu_id, m.menu_name as sub_menu, b.note, api.req_method, api.req_url
+        FROM sys_button b
+                 LEFT JOIN sys_menu m ON m.id = b.menu_id
+                 INNER JOIN sys_resource_api api ON b.id = api.resource_id AND api.resource_type = 'BUTTON'
+        WHERE b.id = #{id}
+    </select>
+</mapper>

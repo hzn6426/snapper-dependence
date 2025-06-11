@@ -1,0 +1,3 @@
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+com.baomibing.cache.config.RedisConfiguration,\
+com.baomibing.cache.config.CaffeineConfiguration

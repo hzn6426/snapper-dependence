@@ -1,0 +1,4 @@
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+com.baomibing.gateway.config.ExceptionAutoConfiguration,\
+com.baomibing.gateway.config.GateWayAutoConfiguration,\
+com.baomibing.gateway.config.WebSecurityConfiguration

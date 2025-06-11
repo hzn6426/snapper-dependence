@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.baomibing.authority.mapper.SysUserExceptEntrustMapper">
+
+    
+    <!-- 根据用户ID和业务权限ID获取用户委托的用户ID列表 -->
+    <select id="listEntrustUserIdsByGroupAndUserAndPerm" resultType="java.lang.String">
+        SELECT u.id
+		FROM sys_user u
+		INNER JOIN sys_user_except_entrust ue ON ue.user_except_entrust_id = u.id
+		WHERE ue.user_id = #{userId, jdbcType=CHAR} and ue.perm_id = #{permId,jdbcType=CHAR} and ue.org_id = #{orgId,jdbcType=CHAR}
+    </select>
+    
+    <!-- 根据用户ID和业务权限ID获取用户委托的用户名列表 -->
+    <select id="listEntrustUserCodesByGroupAndUserAndPerm" resultType="java.lang.String">
+        SELECT u.user_no
+		FROM sys_user u
+		INNER JOIN sys_user_except_entrust ue ON ue.user_except_entrust_id = u.id
+		WHERE ue.user_id = #{userId, jdbcType=CHAR} and ue.perm_id = #{permId,jdbcType=CHAR} and ue.org_id = #{orgId,jdbcType=CHAR}
+    </select>
+    
+    <!-- 根据用户ID及业务权限ID删除该用户该功能委托的用户 -->
+    <delete id="deleteByGroupAndUserAndPerm">
+    	DELETE FROM sys_user_except_entrust  WHERE user_id = #{userId, jdbcType=CHAR} AND perm_id = #{permId, jdbcType=CHAR} and org_id = #{orgId,jdbcType=CHAR}
+    </delete>
+</mapper>

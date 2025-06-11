@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.baomibing.authority.mapper.SysPositionGroupEntrustMapper">
+
+    
+    <!-- 根据用户和业务权限ID获取委托的组织列表 -->
+    <select id="listEntrustGroupsByPosition" resultType="com.baomibing.authority.entity.SysGroup">
+        SELECT g.id, g.group_name, g.glft, g.grht, g.group_level
+		FROM sys_position_group_entrust pge
+		INNER JOIN sys_group g ON pge.group_entrust_id = g.id
+		WHERE pge.position_id = #{positionId, jdbcType=CHAR}
+    </select>
+    
+</mapper>

@@ -1,0 +1,269 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.baomibing.authority.mapper.SysRoleResourceMapper">
+
+        
+    <!-- 根据角色列表获取按钮列表 -->
+    <select id="listPermButtonsByMenuAndRoles" resultType="com.baomibing.authority.entity.SysButton">
+        SELECT sb.id, sb.button_name
+		FROM sys_role r
+		INNER JOIN sys_role_resource rr ON r.id = rr.role_id
+		INNER JOIN sys_button sb ON rr.resource_id = sb.id 
+		AND rr.resource_type = 'BUTTON'
+		<where>
+		<choose>
+			<when test="roleIdList != null and roleIdList.size() > 0 ">
+ 				sb.be_unauth = 0 AND sb.menu_id = #{menuId,jdbcType=CHAR} AND r.id in 
+				<foreach collection="roleIdList" index="index" item="item" open="(" separator="," close=")">
+		            #{item}       
+		        </foreach>
+		    </when>
+		    <otherwise>
+		    	1 = 0
+		    </otherwise>
+		</choose>
+        </where>
+    </select>
+    
+    <select id="listResourceApiByRoles" resultType="com.baomibing.authority.entity.SysResourceApi">
+    	SELECT api.id, api.resource_id, api.resource_type, api.req_url, api.req_method, api.state
+    	FROM sys_resource_api api 
+    	LEFT JOIN sys_role_resource r ON r.resource_id = api.resource_id AND r.resource_type = api.resource_type
+    	LEFT JOIN sys_button sb ON api.resource_id = sb.id AND api.resource_type = 'BUTTON'
+    	LEFT JOIN sys_menu sm ON sm.id = api.resource_id AND api.resource_type = 'MENU'
+    	<where>
+		<choose>
+			<when test="roleIdList != null and roleIdList.size() > 0 ">
+ 				sb.be_unauth = 1 OR sm.be_unauth = 1 OR r.role_id in 
+				<foreach collection="roleIdList" index="index" item="item" open="(" separator="," close=")">
+		            #{item}       
+		        </foreach>
+		    </when>
+		    <otherwise>
+		    	1 = 0
+		    </otherwise>
+		</choose>
+        </where>
+    </select>
+    
+    <!-- 根据角色列表获取菜单列表 -->
+    <select id="listAllPermMenusByRoles" resultType="com.baomibing.authority.entity.SysMenu">
+        SELECT DISTINCT sm.id, sm.redirect, sm.be_hidden,sm.be_unauth,
+         sm.menu_name, sm.priority, sm.icon, sm.parent_id, ra.req_url
+		FROM sys_menu sm
+		LEFT JOIN sys_role_resource rr ON sm.id = rr.resource_id AND rr.resource_type = 'MENU'
+		LEFT JOIN sys_role r ON rr.role_id = r.id
+		INNER JOIN sys_resource_api ra ON sm.id = ra.resource_id AND ra.resource_type = 'MENU'
+		<where>  
+		<if test="roleIdList != null and roleIdList.size() > 0">
+ 			(sm.be_unauth = 0 AND  r.id in 
+			<foreach collection="roleIdList" index="index" item="item" open="(" separator="," close=")">
+	            #{item}       
+	        </foreach>
+	        )
+	    </if>
+	     OR (sm.be_unauth = 1)
+	    </where>
+        ORDER BY  sm.priority ,sm.parent_id ASC
+    </select>
+    
+    <!-- 根据角色列表获取菜单列表 -->
+    <select id="listAllPermPointMenusByRoles" resultType="com.baomibing.authority.entity.SysMenu">
+        SELECT DISTINCT sm.id, sm.redirect, sm.be_hidden,
+         sm.menu_name, sm.priority, sm.icon, sm.parent_id, ra.req_url
+		FROM sys_menu sm
+		LEFT JOIN sys_role_resource rr ON sm.id = rr.resource_id AND rr.resource_type = 'MENU'
+		LEFT JOIN sys_role r ON rr.role_id = r.id
+		INNER JOIN sys_resource_api ra ON sm.id = ra.resource_id AND ra.resource_type = 'MENU'
+		<where>  
+		<choose>
+			<when test="roleIdList != null and roleIdList.size() > 0">
+				sm.menu_type = #{menuType,jdbcType=CHAR} AND (
+				(sm.be_unauth = 0 AND  r.id in 
+					<foreach collection="roleIdList" index="index" item="item" open="(" separator="," close=")">
+			            #{item}       
+			        </foreach>
+			    ) OR (sm.be_unauth = 1))
+			</when>
+			<otherwise>
+				sm.menu_type = #{menuType,jdbcType=CHAR} AND sm.be_unauth = 1
+			</otherwise>
+		</choose>
+		AND sm.be_hidden = 0
+	    </where>
+        ORDER BY  sm.priority ,sm.parent_id ASC
+    </select>
+    
+    <!-- 超级管理员获取菜单列表 -->
+    <select id="listAllPermMenusForSuper" resultType="com.baomibing.authority.entity.SysMenu">
+    	SELECT DISTINCT sm.id, sm.redirect, sm.be_hidden, 
+         sm.menu_name, sm.priority, sm.icon, sm.parent_id, ra.req_url
+		FROM sys_menu sm
+		LEFT JOIN sys_role_resource rr ON sm.id = rr.resource_id AND rr.resource_type = 'MENU'
+		LEFT JOIN sys_role r ON rr.role_id = r.id
+		INNER JOIN sys_resource_api ra ON sm.id = ra.resource_id AND ra.resource_type = 'MENU'
+		<where>  
+			sm.menu_type = #{menuType,jdbcType=CHAR}
+	    </where>
+        ORDER BY  sm.priority ,sm.parent_id ASC
+    </select>
+    
+    <!-- 展示所有菜单及菜单下的按钮-为分配权限-只加载需要授权的 -->
+    <select id="listAllMenusAndButtonsForGrant" resultType="com.baomibing.authority.entity.SysMenu">
+	    SELECT
+			m.id,m.menu_name,m.parent_id,
+			GROUP_CONCAT(DISTINCT CONCAT(b.id,'-',b.button_name)) AS buttons
+		FROM
+			sys_menu m
+			LEFT JOIN sys_button b ON b.menu_id = m.id
+			INNER JOIN sys_resource_api ra ON (ra.resource_id = m.id AND ra.resource_type = 'MENU')
+			OR (ra.resource_id = b.id AND ra.resource_type = 'BUTTON')
+		WHERE  m.be_unauth = 0 OR b.be_unauth = 0
+		GROUP BY
+			m.id
+    </select>
+    
+    <!-- 展示所有菜单及为分配权限-只加载需要授权的 -->
+    <select id="listAllMenusForGrant" resultType="com.baomibing.authority.entity.SysMenu">
+	    SELECT DISTINCT m.id,m.menu_name,m.parent_id,m.be_lock,m.menu_type,m.priority
+		FROM sys_menu m
+		INNER JOIN sys_resource_api ra ON (ra.resource_id = m.id AND ra.resource_type = 'MENU')
+		WHERE  m.be_unauth = 0
+		ORDER BY m.menu_type, m.priority ASC
+    </select>
+
+	<!-- 展示用户角色对应的菜单列表-只加载需要授权的 -->
+	<select id="listAllRoleMenusForGrant" resultType="com.baomibing.authority.entity.SysMenu">
+		SELECT DISTINCT m.id,m.menu_name,m.parent_id,m.be_lock,m.menu_type,m.priority
+		FROM sys_menu m
+		INNER JOIN sys_resource_api ra ON (ra.resource_id = m.id AND ra.resource_type = 'MENU')
+		LEFT JOIN sys_role_resource srr ON (srr.resource_id = m.id AND srr.resource_type = 'MENU')
+		WHERE  m.be_unauth = 0 and srr.role_id in
+		<foreach collection="roleIds" index="index" item="item" open="(" separator="," close=")">
+			#{item}
+		</foreach>
+		ORDER BY m.menu_type, m.priority ASC
+	</select>
+
+	<!-- 展示菜单及用户角色对应的按钮列表-只加载需要授权的 -->
+	<select id="listAllButtonsForGrant" resultType="com.baomibing.authority.entity.SysButton">
+		SELECT DISTINCT sb.id, sb.button_name, sb.be_unauth, sb.sub_menu, sb.menu_id,sb.be_lock
+		FROM sys_button sb
+		WHERE sb.be_unauth = 0 and sb.menu_id = #{menuId}
+	</select>
+
+	<!-- 展示菜单及用户角色对应的按钮列表-只加载需要授权的 -->
+	<select id="listAllRoleButtonsForGrant" resultType="com.baomibing.authority.entity.SysButton">
+		SELECT DISTINCT sb.id, sb.button_name, sb.be_unauth, sb.sub_menu, sb.menu_id,sb.be_lock
+		FROM sys_button sb
+		INNER JOIN sys_role_resource rr ON rr.resource_id = sb.id and rr.resource_type = 'BUTTON'
+		WHERE sb.be_unauth = 0 and sb.menu_id = #{menuId} and rr.role_id in
+		<foreach collection="roleIds" index="index" item="item" open="(" separator="," close=")">
+			#{item}
+		</foreach>
+	</select>
+    
+    <!-- 获取所有已授权资源对应的角色列表-用于授权缓存预热 -->
+    <select id="listAllPermButtonsForGroupRoleIds" resultType="com.baomibing.authority.entity.SysResourceApi">
+    	SELECT GROUP_CONCAT(srr.role_id) role_ids, api.req_url, api.req_method
+    	FROM sys_resource_api api 
+    	LEFT JOIN sys_role_resource srr ON api.resource_id = srr.resource_id AND api.resource_type = srr.resource_type 
+    	LEFT JOIN sys_button sb ON srr.resource_id = sb.id 
+    	WHERE api.resource_type = 'BUTTON' AND sb.be_unauth = 0
+		<if test="buttonIds !=null and buttonIds.size() > 0">
+			AND sb.id in
+			<foreach collection="buttonIds" index="index" item="item" open="(" separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+    	GROUP BY api.req_url, api.req_method
+    </select>
+    
+    <!-- 获取所有未授权资源对应的角色列表-用于授权缓存预热 -->
+    <select id="listAllUnPermButtonsForGroupRoleIds" resultType="com.baomibing.authority.entity.SysResourceApi">
+    	SELECT  api.req_url, api.req_method 
+    	FROM sys_resource_api api 
+    	INNER JOIN sys_button sb ON api.resource_id = sb.id 
+    	WHERE api.resource_type = 'BUTTON' AND sb.be_unauth = 1
+		<if test="buttonIds !=null and buttonIds.size() > 0">
+			AND sb.id in
+			<foreach collection="buttonIds" index="index" item="item" open="(" separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+    	GROUP BY api.req_url, api.req_method
+    </select>
+    
+    <!-- 根据用户获取所有权限按钮及其对应的业务权限范围 -->
+    <select id="listPermButtonsForBusinessPermByGroupAndUser" resultType="com.baomibing.authority.entity.SysButton">
+    	SELECT DISTINCT sb.id,sb.menu_id,sb.button_name, sb.sub_menu, IFNULL(sbp.perm_scope, 'CURRENT_USER') AS perm_scope, bp.id as perm_id,
+    	sbp.perm_start_time, sbp.perm_end_time, bp.perm_action, IF(sdp.id is null, '-','已配置') AS data_perm,IF(scp.id is null ,'-','已配置') AS column_perm
+		FROM sys_button sb
+		INNER JOIN sys_role_resource srr ON sb.id = srr.resource_id AND srr.resource_type = 'BUTTON'
+		INNER JOIN sys_user_role ur ON ur.role_id = srr.role_id
+		LEFT JOIN sys_business_perm bp ON bp.button_id = sb.id
+		LEFT JOIN sys_user_business_perm sbp ON sbp.perm_id = bp.id AND ur.user_id = sbp.user_id AND sbp.org_id = ur.org_id
+		LEFT JOIN sys_user_data_perm sdp ON sdp.perm_id = bp.id AND ur.user_id = sdp.user_id AND sdp.org_id = ur.org_id
+		LEFT JOIN sys_user_column_perm scp ON scp.perm_id = bp.id AND ur.user_id = scp.user_id AND scp.org_id = ur.org_id
+		WHERE ur.user_id = #{userId,jdbcType=CHAR} AND ur.org_id = #{orgId,jdbcType=CHAR} AND  sb.be_unauth = 0
+    	
+    </select>
+
+	<select id="listPermButtonsForBusinessPermByUset" resultType="com.baomibing.authority.entity.SysButton">
+		SELECT DISTINCT sb.id, sb.menu_id,sb.button_name, sb.sub_menu, IFNULL(sbp.perm_scope, 'CURRENT_USER') AS perm_scope, bp.id as perm_id,
+						sbp.perm_start_time, sbp.perm_end_time, bp.perm_action, IF(sdp.id is null, '-','已配置') AS data_perm, IF(scp.id is null ,'-','已配置') AS column_perm
+		FROM sys_button sb
+		 INNER JOIN sys_role_resource srr ON sb.id = srr.resource_id AND srr.resource_type = 'BUTTON'
+		 INNER JOIN sys_uset_role ur ON ur.role_id = srr.role_id
+		 LEFT JOIN sys_business_perm bp ON bp.button_id = sb.id
+		 LEFT JOIN sys_uset_business_perm sbp ON sbp.perm_id = bp.id AND ur.uset_id = sbp.uset_id
+		 LEFT JOIN sys_uset_data_perm sdp ON sdp.perm_id = bp.id AND ur.uset_id = sdp.uset_id
+		 LEFT JOIN sys_uset_column_perm scp ON scp.perm_id = bp.id AND ur.uset_id = scp.uset_id
+		WHERE ur.uset_id = #{usetId,jdbcType=CHAR} AND  sb.be_unauth = 0
+		ORDER BY sb.sub_menu DESC
+
+	</select>
+
+	<!-- 根据角色列表获取按钮列表 -->
+	<select id="listPermButtonsByRoles" resultType="com.baomibing.authority.entity.SysButton">
+		SELECT DISTINCT sb.id, sb.button_name,sb.be_unauth, sb.sub_menu, sb.menu_id, bp.id as perm_id,
+		bp.perm_action
+		FROM sys_button sb
+		INNER JOIN sys_role_resource srr ON sb.id = srr.resource_id AND srr.resource_type = 'BUTTON'
+		INNER JOIN sys_user_role ur ON ur.role_id = srr.role_id
+		LEFT JOIN sys_business_perm bp ON bp.button_id = sb.id
+		<where>
+			sb.be_unauth = 1 OR (
+			sb.be_unauth = 0  AND ur.role_id in
+			<foreach collection="roleIdList" index="index" item="item" open="(" separator="," close=")">
+				#{item}
+			</foreach>
+			)
+		</where>
+	</select>
+
+	<!-- 根据用户及权限获取对应的权限范围信息	-->
+	<select id="listUserPermScopeByPerm" resultType="com.baomibing.authority.entity.SysButton">
+		SELECT bp.id as perm_id,IFNULL(sbp.perm_scope, 'CURRENT_USER') AS perm_scope,
+		sbp.perm_start_time, sbp.perm_end_time, bp.perm_action
+		FROM sys_business_perm bp
+		LEFT JOIN sys_user_business_perm sbp ON sbp.perm_id = bp.id
+		<where>
+			sbp.user_id = #{userId} and sbp.org_id = #{orgId} and bp.id = #{permId}
+		</where>
+	</select>
+
+	<!-- 根据用户组列表及权限获取对应的权限范围列表	-->
+	<select id="listUsetPermScopeByPerm" resultType="com.baomibing.authority.entity.SysButton">
+		SELECT bp.id as perm_id,IFNULL(sbp.perm_scope, 'CURRENT_USER') AS perm_scope,
+		sbp.perm_start_time, sbp.perm_end_time, bp.perm_action
+		FROM sys_business_perm bp
+		LEFT JOIN sys_uset_business_perm sbp ON sbp.perm_id = bp.id
+		<where>
+			bp.id = #{permId} AND sbp.uset_id  IN
+			<foreach collection="usetIdList" index="index" item="item" open="(" separator="," close=")">
+				#{item}
+			</foreach>
+		</where>
+	</select>
+</mapper>

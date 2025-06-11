@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.baomibing.authority.mapper.SysUsetGroupEntrustMapper">
+
+    
+    <!-- 根据用户组和业务权限ID获取委托的组织列表 -->
+    <select id="listEntrustGroupsByUsetAndPerm" resultType="com.baomibing.authority.entity.SysGroup">
+        SELECT g.id, g.group_name, g.glft, g.grht, g.group_level
+		FROM sys_uset_group_entrust ge
+		INNER JOIN sys_group g ON ge.group_entrust_id = g.id
+		WHERE  ge.perm_id = #{permId,jdbcType=CHAR} AND ge.uset_id IN
+        <foreach collection="usetIds" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+    
+    <!-- 根据用户组ID和业务权限ID删除该用户对于该功能的委托的组织 -->
+    <delete id="deleteByUsetAndPerm">
+    	DELETE FROM sys_uset_group_entrust  WHERE uset_id = #{usetId, jdbcType=CHAR}  AND perm_id = #{permId, jdbcType=CHAR}
+    </delete>
+</mapper>
