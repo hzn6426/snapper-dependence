@@ -57,6 +57,7 @@ public class UserDto extends StateProcess<UserState, UserAction> {
      */
     private String weixin;
     private String userTag;
+    private String pointTag;
     private String userEmail;
     private String userEmailPwd;
     private String userEmailHost;

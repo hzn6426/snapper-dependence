@@ -28,6 +28,7 @@ public enum ExceptionEnum implements ExceptionEnumable{
 	USER_IP_LOCKED(994, "用户IP已锁定, 请联系管理员!"),
 	USER_AUTH_CODE_EXPIRE(993, "用户授权码已过期, 请联系授权人进行续期!"),
 	USER_NOT_OPEN_AUTH_CODE(992, "用户未设置授权码登录信息,不能在授权码登录页面进行登录!"),
+	USER_POINT_NOT_SUPPORT(991, "用户不支持该设备端登录!"),
 	UN_CHECKED_EXCEPTION(10000, "内部错误，未知的系统运行异常！"),
 	NO_BUNDLE_CODE(10001, "未绑定的异常代码！{0}"),
 	OBJECT_IS_NULL(10002, "空指针异常{0}，无法进行后续操作！"),

@@ -66,6 +66,8 @@ public class SysUser extends MBaseModel {
     private String weixin;
 	@TableField("user_tag")
     private String userTag;
+    @TableField("point_tag")
+    private String pointTag;
     @TableField("user_email")
     private String userEmail;
     @TableField("user_email_pwd")

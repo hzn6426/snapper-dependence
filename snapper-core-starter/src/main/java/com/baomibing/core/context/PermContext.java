@@ -180,4 +180,23 @@ public class PermContext {
         if (Checker.beEmpty(ignores)) return;
         ignores.remove(action);
     }
+
+    //=======================================================================//
+    //                 User  Column  FIND_IN_SET                             //
+    //=======================================================================//
+
+    private static final TransmittableThreadLocal<Boolean> commaUserColumnLocal = new TransmittableThreadLocal<>();
+
+    public static void withCommaInCreateUserColumn(Boolean yes) {
+        commaUserColumnLocal.set(yes);
+    }
+
+    public static Boolean beCommaInCreateUserColumn() {
+        Boolean yes = commaUserColumnLocal.get();
+        return Checker.beNotNull(yes) && Boolean.TRUE.equals(yes);
+    }
+
+    public static void removeCommaInCreateUserColumn() {
+        commaUserColumnLocal.remove();
+    }
 }

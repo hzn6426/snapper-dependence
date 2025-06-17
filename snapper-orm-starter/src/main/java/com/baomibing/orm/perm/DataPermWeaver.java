@@ -153,6 +153,9 @@ public class DataPermWeaver implements Interceptor {
 				ew.setScope(SCOPE_CUSTOMER_SPECIFIED);
 			}
 		}
+		if (Boolean.TRUE.equals(PermContext.beCommaInCreateUserColumn())) {
+			ew.setBeUserColumnWithComma(Boolean.TRUE);
+		}
 		//忽略创建用户列
 		if (PermContext.beIgnoreCreateUserColumn()) {
 			if (Checker.beNotEmpty(ew.getUserColumn())) {
@@ -303,7 +306,7 @@ public class DataPermWeaver implements Interceptor {
 		return tableName;
 	}
 
-	private String buildUserColumnSQL(final String tableName, final String[] userColumns, Set<String> userNos, Boolean beNotIn) {
+	private String buildUserColumnSQL(final String tableName, final String[] userColumns, Set<String> userNos, Boolean beNotIn, Boolean beUserColumnInComma) {
 		StringBuilder sqlBuilder = new StringBuilder();
 		String sql1 = "{0} ";
 		String sql2 = "SUBSTR({0}, LOCATE('''#''', {0}) + 1 ) ";
@@ -328,10 +331,21 @@ public class DataPermWeaver implements Interceptor {
 		Iterator<String> columnsIt = columns.iterator();
 		while (columnsIt.hasNext()) {
 			String c = columnsIt.next();
-			sqlBuilder.append(c).append(beNotIn ? " NOT " : "").append(" IN ")
-					.append("(")
-					.append(userNos.stream().map(u -> "'" + u + "'").collect(Collectors.joining(",")))
-					.append(")");
+			if (Boolean.TRUE.equals(beUserColumnInComma)) {
+				Iterator<String> userNosIt = userNos.iterator();
+				sqlBuilder.append(beNotIn ? " NOT " : "");
+				sqlBuilder.append(" ( ");
+				while (userNosIt.hasNext()) {
+					sqlBuilder.append(" FIND_IN_SET('").append(userNosIt.next()).append("',").append(c).append(")")
+							.append(userNosIt.hasNext() ? " OR " : "");
+				}
+				sqlBuilder.append(" ) ");
+			} else {
+				sqlBuilder.append(c).append(beNotIn ? " NOT " : "").append(" IN ")
+						.append("(")
+						.append(userNos.stream().map(u -> "'" + u + "'").collect(Collectors.joining(",")))
+						.append(")");
+			}
 			if (columnsIt.hasNext()) {
 				sqlBuilder.append(beNotIn ? " AND " : " OR ");
 			}
@@ -385,11 +399,11 @@ public class DataPermWeaver implements Interceptor {
 
 	//构建用户委托条件
 	private String buildEntrustUserCondition(String tableName, EntrustWarpper ew) {
-		return buildUserColumnSQL(tableName, ew.getUserColumn(), Sets.newHashSet(ew.getUserNos()), false);
+		return buildUserColumnSQL(tableName, ew.getUserColumn(), Sets.newHashSet(ew.getUserNos()), false, ew.isBeUserColumnWithComma());
 	}
 
 	private String buildExceptEntrustUserCondition(String tableName, EntrustWarpper ew) {
-		return buildUserColumnSQL(tableName, ew.getUserColumn(), Sets.newHashSet(ew.getExceptUserNos()), true);
+		return buildUserColumnSQL(tableName, ew.getUserColumn(), Sets.newHashSet(ew.getExceptUserNos()), true, ew.isBeUserColumnWithComma());
 	}
 
 	private String buildCompanyScopeCondition(String tableName, EntrustWarpper ew) {

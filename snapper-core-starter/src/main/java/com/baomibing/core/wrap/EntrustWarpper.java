@@ -45,6 +45,8 @@ public class EntrustWarpper implements Serializable {
 	private Boolean beOnlyFilterCompany = Boolean.FALSE;
 	//是否忽略分公司权限
 	private Boolean beIgnoreCompanyScope = Boolean.FALSE;
+	//是否用户列筛选使用FIND_IN_SET方式
+	private boolean beUserColumnWithComma = false;
 	//授权码登录
 	private boolean beLoginWithAuthCode = false;
 	//权限插入的位置-指定的表名或别名同级

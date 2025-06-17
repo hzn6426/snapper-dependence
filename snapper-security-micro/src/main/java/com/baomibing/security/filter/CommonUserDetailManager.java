@@ -12,10 +12,7 @@ import com.baomibing.authority.exception.AuthPassExpiredException;
 import com.baomibing.authority.service.*;
 import com.baomibing.authority.state.UserState;
 import com.baomibing.cache.redis.RedisService;
-import com.baomibing.security.exception.NotOpenAuthPassException;
-import com.baomibing.security.exception.UserLockedException;
-import com.baomibing.security.exception.UserNotActiveException;
-import com.baomibing.security.exception.UserStoppedException;
+import com.baomibing.security.exception.*;
 import com.baomibing.security.jwt.SecurityUser;
 import com.baomibing.tool.constant.Strings;
 import com.baomibing.tool.user.UserUtil;
@@ -80,6 +77,10 @@ public class CommonUserDetailManager implements UserDetailsService {
 			throw new UserStoppedException("user account is Stopped!");
 		} else if (UserState.LOCKED.name().equals(userDto.getState())) {
 			throw new UserLockedException("user account is Locked!");
+		}
+
+		if (!userDto.getPointTag().contains(systemTag)) {
+			throw new NotSupportPointException("user not support point tag!");
 		}
 		//授权码登录验证是否过期
 		if (SystemTagEnum.temp.name().equals(systemTag)) {

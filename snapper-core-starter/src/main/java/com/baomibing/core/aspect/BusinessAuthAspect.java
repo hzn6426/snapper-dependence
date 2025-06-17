@@ -72,6 +72,7 @@ public class BusinessAuthAspect {
 			PermContext.removeIgnoreCompanyScope();
 			PermContext.removeIgnoreUserScope();
 			PermContext.removeIgnoreGroupScope();
+			PermContext.removeCommaInCreateUserColumn();
 		}
 	}
 

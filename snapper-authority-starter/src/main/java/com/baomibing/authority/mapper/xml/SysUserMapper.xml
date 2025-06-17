@@ -5,7 +5,7 @@
     <!-- 根据用户工号、姓名、电话、邮箱获取用户信息 -->
     <select id="searchByCondition" resultType="com.baomibing.authority.entity.SysUser">
         SELECT DISTINCT u.id, u.user_no, u.user_real_cn_name, u.user_real_en_name, u.user_sex, u.user_email,
-        u.user_mobile,u.user_tag,u.qq,u.weixin, u.expire_policy, u.be_multi_login,
+        u.user_mobile,u.user_tag,u.qq,u.weixin, u.expire_policy, u.be_multi_login,u.point_tag,
         u.expire_time, u.create_time, u.create_user_cn_name, u.state, u.avatar, u.note,u.be_lock,
         CONCAT(GROUP_CONCAT(DISTINCT r.role_name)) AS userRoles, CONCAT(GROUP_CONCAT(DISTINCT r.id)) AS userRoleIds,
         CONCAT(GROUP_CONCAT(DISTINCT g.group_name)) AS userGroups,CONCAT(GROUP_CONCAT(DISTINCT g.id)) AS userGroupIds,

@@ -326,6 +326,8 @@ public class AuthorityWebExceptionHandler {
             return R.build(new ServerRuntimeException(ExceptionEnum.USER_ACCOUNT_LOCKED)).withRequest(request);
         } else if (ex.getCause() instanceof AuthPassExpiredException) {
             return R.build(new ServerRuntimeException(ExceptionEnum.USER_AUTH_CODE_EXPIRE)).withRequest(request);
+        }  else if (ex.getCause() instanceof NotSupportPointException) {
+            return R.build(new ServerRuntimeException(ExceptionEnum.USER_POINT_NOT_SUPPORT)).withRequest(request);
         }
         return R.build(new ServerRuntimeException(ExceptionEnum.USER_NAME_OR_PASSWD_NOT_CORRECT)).withRequest(request);
     }
