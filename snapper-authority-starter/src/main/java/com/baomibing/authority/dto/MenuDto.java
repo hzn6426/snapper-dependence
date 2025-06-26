@@ -45,6 +45,8 @@ public class MenuDto implements Serializable {
 
 	private Boolean beUnauth;
 
+	private Boolean beLoginUnauth;
+
 	private String icon;
 
 	private String redirect;

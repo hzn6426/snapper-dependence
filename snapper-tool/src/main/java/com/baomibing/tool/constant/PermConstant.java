@@ -17,6 +17,9 @@ public abstract class PermConstant {
     //权限缓存预热时，资源不需要权限，此时角色ID做此标记
     public static final String RESOURCE_NO_NEED_ROLE = "RESOURCE_NO_NEED_ROLE";
 
+    //权限缓存预热时，资源不需要登录，此时角色ID做此标记
+    public static final String RESOURCE_NO_NEED_LOGIN = "RESOURCE_NO_NEED_LOGIN";
+
     public static final String CREATE_USER = "create_user";
 
     public static final String GROUP_ID = "group_id";

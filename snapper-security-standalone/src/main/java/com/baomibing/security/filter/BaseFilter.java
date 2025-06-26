@@ -249,7 +249,7 @@ public abstract class BaseFilter extends OncePerRequestFilter {
         }
     }
 
-    protected void verifyAuthorization(HttpServletRequest request, String userCacheAuths) {
+    protected String findCacheKey(HttpServletRequest request) {
         String url = request.getRequestURI();
         String method = request.getMethod();
         String authorizationCacheKey = UserKey.buttonPermKey(method,url) + "*";
@@ -276,6 +276,11 @@ public abstract class BaseFilter extends OncePerRequestFilter {
                 }
             }
         }
+        return matchedCacheKey;
+    }
+
+    protected void verifyAuthorization(HttpServletRequest request, String userCacheAuths) {
+        String matchedCacheKey = findCacheKey(request);
         //没有匹配上，说明当前的请求没有权限
         if (Checker.beEmpty(matchedCacheKey)) {
             throw new ServerRuntimeException(ExceptionEnum.NO_PRIVILEGE_EXCEPTION);
@@ -284,7 +289,7 @@ public abstract class BaseFilter extends OncePerRequestFilter {
         String needRole = cacheService.get(matchedCacheKey);
 
         //URL资源不需要权限
-        if (RESOURCE_NO_NEED_ROLE.equals(needRole)) {
+        if (needRole.contains(RESOURCE_NO_NEED_ROLE)) {
             return;
         }
         //表明此API没有分配给任何角色

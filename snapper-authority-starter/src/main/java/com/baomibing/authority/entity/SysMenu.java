@@ -39,6 +39,7 @@ public class SysMenu extends MBaseModel {
 	private String redirect;
     @TableField("be_unauth")
     private Boolean beUnauth;
+    private Boolean beLoginUnauth;
     @TableField("be_hidden")
     private Boolean beHidden;
     @TableField("priority")

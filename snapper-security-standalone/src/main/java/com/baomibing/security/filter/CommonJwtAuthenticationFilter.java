@@ -17,6 +17,7 @@ import java.io.IOException;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 
+import static com.baomibing.tool.constant.PermConstant.RESOURCE_NO_NEED_LOGIN;
 import static com.baomibing.tool.constant.RedisKeyConstant.*;
 
 /**
@@ -123,6 +124,17 @@ public class CommonJwtAuthenticationFilter extends BaseFilter {
 		if (beLoginRequest(url)) {
 			filterChain.doFilter(request, response);
 			return;
+		}
+
+		String matchedCacheKey = findCacheKey(request);
+
+		if (Checker.beNotEmpty(matchedCacheKey)) {
+			String needRole = cacheService.get(matchedCacheKey);
+
+			//URL资源不需要鉴权
+			if (needRole.contains(RESOURCE_NO_NEED_LOGIN)) {
+				return;
+			}
 		}
 
 

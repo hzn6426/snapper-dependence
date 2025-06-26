@@ -23,6 +23,7 @@ import com.baomibing.core.common.Assert;
 import com.baomibing.orm.base.MBaseServiceImpl;
 import com.baomibing.orm.perm.ActionSelectTable;
 import com.baomibing.tool.constant.RedisKeyConstant;
+import com.baomibing.tool.constant.Strings;
 import com.baomibing.tool.user.UserKey;
 import com.baomibing.tool.util.Checker;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -39,6 +40,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static com.baomibing.tool.constant.NumberConstant.ONE_DAY_SECONDS;
+import static com.baomibing.tool.constant.PermConstant.RESOURCE_NO_NEED_LOGIN;
 import static com.baomibing.tool.constant.PermConstant.RESOURCE_NO_NEED_ROLE;
 
 /**
@@ -74,7 +76,13 @@ public class SysRoleResourceServiceImpl extends MBaseServiceImpl<SysRoleResource
 		// 无权限(按钮be_unauth = 1)
 		List<ResourceApiDto> unPermApisApis = this.listAllUnPermButtonsForGroupRoleIds(Sets.newHashSet(buttons));
 		// 无权限角色特定标记
-		unPermApisApis.forEach(p -> p.setRoleIds(RESOURCE_NO_NEED_ROLE));
+		unPermApisApis.forEach(p -> {
+			if (Boolean.TRUE.equals(p.getBeLoginUnauth())) {
+				p.setRoleIds(RESOURCE_NO_NEED_ROLE + Strings.COMMA + RESOURCE_NO_NEED_LOGIN);
+			} else {
+				p.setRoleIds(RESOURCE_NO_NEED_ROLE);
+			}
+		});
 		apis.addAll(unPermApisApis);
 		// 删除前缀的KEY
 		if (Checker.beEmpty(buttons)) {

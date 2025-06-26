@@ -181,7 +181,7 @@
     
     <!-- 获取所有未授权资源对应的角色列表-用于授权缓存预热 -->
     <select id="listAllUnPermButtonsForGroupRoleIds" resultType="com.baomibing.authority.entity.SysResourceApi">
-    	SELECT  api.req_url, api.req_method 
+    	SELECT  api.req_url, api.req_method, sb.be_login_unauth
     	FROM sys_resource_api api 
     	INNER JOIN sys_button sb ON api.resource_id = sb.id 
     	WHERE api.resource_type = 'BUTTON' AND sb.be_unauth = 1
@@ -191,7 +191,7 @@
 				#{item}
 			</foreach>
 		</if>
-    	GROUP BY api.req_url, api.req_method
+    	GROUP BY api.req_url, api.req_method,sb.be_login_unauth
     </select>
     
     <!-- 根据用户获取所有权限按钮及其对应的业务权限范围 -->

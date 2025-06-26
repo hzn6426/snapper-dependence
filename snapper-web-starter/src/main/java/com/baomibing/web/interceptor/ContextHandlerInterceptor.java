@@ -101,10 +101,11 @@ public class ContextHandlerInterceptor implements HandlerInterceptor {
             return true;
         }
 
-        buildContext(request);
         if (beLogger && ignoreULog(request, handler)) {
             beforeExecuteLog(request, handler);
         }
+
+        buildContext(request);
         return true;
     }
 

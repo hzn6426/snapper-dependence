@@ -30,4 +30,6 @@ public class ResourceApiDto implements Serializable {
 	private String reqMethod;
 	private String state;
 	private String roleIds;
+
+	private String beLoginUnauth;
 }

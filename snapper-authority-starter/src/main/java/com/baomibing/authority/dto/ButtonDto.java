@@ -39,6 +39,7 @@ public class ButtonDto implements Serializable {
     private String reqMethod;
     private String reqUrl;
     private Boolean beUnauth;
+    private Boolean beLoginUnauth;
     private String subMenu;
     
     private String permScope;

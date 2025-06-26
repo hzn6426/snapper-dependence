@@ -42,5 +42,6 @@ public class SysResourceApi extends MBaseModel{
 	
 	
 	private transient String roleIds;//获取所有资源对应的角色分组列表，用于权限缓存预热
+	private transient String beLoginUnauth;
 	
 }

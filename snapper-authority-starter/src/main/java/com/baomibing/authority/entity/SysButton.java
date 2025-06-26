@@ -35,6 +35,7 @@ public class SysButton extends MBaseModel {
     private String note;
     @TableField("be_unauth")
     private Boolean beUnauth;
+	private Boolean beLoginUnauth;
 	@TableField("sub_menu")
 	private String subMenu;
 	private String groupId;
