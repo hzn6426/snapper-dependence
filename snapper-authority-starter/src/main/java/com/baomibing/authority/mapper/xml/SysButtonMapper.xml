@@ -4,7 +4,7 @@
 
     <!-- 根据条件分页查询按钮及API信息 -->
     <select id="listButtonAndApiByMenu" resultType="com.baomibing.authority.entity.SysButton">
-        SELECT b.id, b.be_unauth,b.be_lock, b.button_name, b.menu_id, b.sub_menu, b.note, api.req_method, api.req_url, sbp.id as perm_id, sbp.perm_action, sbp.action_ref
+        SELECT b.id, b.be_unauth,b.be_login_unauth,b.be_lock, b.button_name, b.menu_id, b.sub_menu, b.note, api.req_method, api.req_url, sbp.id as perm_id, sbp.perm_action, sbp.action_ref
         FROM sys_button b
         LEFT JOIN sys_resource_api api ON b.id = api.resource_id AND api.resource_type = 'BUTTON'
         LEFT JOIN sys_business_perm sbp on sbp.button_id = b.id
