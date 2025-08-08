@@ -26,6 +26,7 @@ import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 
 import static com.baomibing.gateway.constant.GateWayConstant.ORDER_TWO;
+import static com.baomibing.tool.constant.PermConstant.RESOURCE_NO_NEED_LOGIN;
 import static com.baomibing.tool.constant.RedisKeyConstant.*;
 import static com.baomibing.tool.constant.WebConstant.*;
 /**
@@ -146,6 +147,17 @@ public class JwtTokenFilter extends BaseFilter implements GlobalFilter, Ordered 
         ///登录或者登出操作
         if (beLoginRequest(url)) {
             return chain.filter(exchange);
+        }
+
+        String matchedCacheKey = findCacheKey(request);
+
+        if (Checker.beNotEmpty(matchedCacheKey)) {
+            String needRole = redisService.get(matchedCacheKey);
+
+            //URL资源不需要鉴权
+            if (needRole.contains(RESOURCE_NO_NEED_LOGIN)) {
+                return chain.filter(exchange);
+            }
         }
 
         //提取token

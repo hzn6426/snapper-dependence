@@ -287,8 +287,7 @@ public abstract class BaseFilter {
 		}
 	}
 
-
-	protected void verifyAuthorization(ServerHttpRequest request, String userCacheAuths) {
+	protected String findCacheKey(ServerHttpRequest request) {
 		String url = getUrl(request);
 		HttpMethod method = request.getMethod();
 		String authorizationCacheKey = UserKey.buttonPermKey(method.name(),url) + "*";
@@ -315,6 +314,11 @@ public abstract class BaseFilter {
 				}
 			}
 		}
+		return matchedCacheKey;
+	}
+
+	protected void verifyAuthorization(ServerHttpRequest request, String userCacheAuths) {
+		String matchedCacheKey = findCacheKey(request);
 		//没有匹配上，说明当前的请求没有权限
 		if (Checker.beEmpty(matchedCacheKey)) {
 			throw new GateWayRuntimeException(GateWayExceptionEnum.NO_PRIVILEGE_EXCEPTION);
