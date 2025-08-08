@@ -6,7 +6,7 @@
     <select id="searchByCondition" resultType="com.baomibing.authority.entity.SysUser">
         SELECT DISTINCT u.id, u.user_no, u.user_real_cn_name, u.user_real_en_name, u.user_sex, u.user_email,
         u.user_mobile,u.user_tag,u.qq,u.weixin, u.expire_policy, u.be_multi_login,u.point_tag,
-        u.expire_time, u.create_time, u.create_user_cn_name, u.state, u.avatar, u.note,u.be_lock,
+        u.expire_time, u.create_time,u.create_user_cn_name, u.state, u.avatar, u.note,u.be_lock,
         CONCAT(GROUP_CONCAT(DISTINCT r.role_name)) AS userRoles, CONCAT(GROUP_CONCAT(DISTINCT r.id)) AS userRoleIds,
         CONCAT(GROUP_CONCAT(DISTINCT g.group_name)) AS userGroups,CONCAT(GROUP_CONCAT(DISTINCT g.id)) AS userGroupIds,
         CONCAT(GROUP_CONCAT(DISTINCT g1.group_name)) AS userParentGroups,
@@ -69,7 +69,7 @@
         </where>
         GROUP BY u.id, u.user_no, u.user_real_cn_name, u.user_real_en_name, u.user_sex, u.user_email,
         u.user_mobile,u.user_tag,u.qq,u.weixin, u.expire_policy, u.be_multi_login,
-        u.expire_time,u.create_time, u.create_user_cn_name, u.state, u.avatar, u.note,u.be_lock
+        u.expire_time,u.create_time,u.create_user_cn_name, u.state, u.avatar, u.note,u.be_lock
         ORDER BY u.user_no desc
         LIMIT #{offset,jdbcType=INTEGER}, #{limit,jdbcType=INTEGER}
     </select>
@@ -140,19 +140,43 @@
         SELECT DISTINCT ug.id as ug_id, u.id , u.user_no, u.user_real_cn_name, u.user_real_en_name, u.user_sex, u.user_email,
         u.user_mobile,u.user_tag,u.qq,u.weixin, p.id as position_id,u.be_lock,
         CONCAT(GROUP_CONCAT(DISTINCT r.role_name)) AS userRoles, CONCAT(GROUP_CONCAT(DISTINCT r.id)) AS userRoleIds,
-        p.post_name,u.expire_time, u.create_time, u.create_user_cn_name, u.state, u.avatar, u.note
+        p.post_name,u.expire_time, u.create_time, u.create_user_cn_name,u.state, u.avatar, u.note
         FROM sys_user_group ug
 		LEFT JOIN sys_user u ON u.id = ug.user_id
 		LEFT JOIN sys_user_position up ON u.id = up.user_id AND up.group_id = ug.group_id
 		LEFT JOIN sys_position p ON  up.position_id = p.id
-		LEFT JOIN sys_user_role AS ur ON u.id = ur.user_id AND ur.org_id = #{groupId,jdbcType=CHAR}
+		LEFT JOIN sys_user_role AS ur ON u.id = ur.user_id AND ur.org_id = #{user.groupId,jdbcType=CHAR}
         LEFT JOIN sys_role AS r ON ur.role_id = r.id
         <where>
-            ug.group_id = #{groupId,jdbcType=CHAR}
+            ug.group_id = #{user.groupId,jdbcType=CHAR}
+            <if test="user != null and user.userName != null and  user.userName != ''">
+                AND u.user_no LIKE CONCAT('%',#{user.userName,jdbcType=CHAR},'%')
+            </if>
+            <if test="user != null and user.userRealCnName != null and  user.userRealCnName != ''">
+                AND u.user_real_cn_name LIKE CONCAT('%',#{user.userRealCnName,jdbcType=CHAR},'%')
+            </if>
+            <if test="user != null and user.userMobile != null and  user.userMobile != ''">
+                AND u.user_mobile LIKE CONCAT('%',#{user.userMobile,jdbcType=CHAR},'%')
+            </if>
+            <if test="user != null and user.userEmail != null and  user.userEmail != ''">
+                AND u.user_email LIKE CONCAT('%',#{user.userEmail,jdbcType=CHAR},'%')
+            </if>
+            <if test="user != null and user.state != null and  user.state != ''">
+                AND u.state = #{user.state,jdbcType=CHAR}
+            </if>
+            <if test="user != null and user.roleName != null and  user.roleName != ''">
+                AND r.role_name LIKE CONCAT('%',#{user.roleName,jdbcType=CHAR},'%')
+            </if>
+            <if test="user != null and user.postName != null and  user.postName != ''">
+                AND p.post_name LIKE CONCAT('%',#{user.postName,jdbcType=CHAR},'%')
+            </if>
+            <if test="user != null and user.userTag != null and  user.userTag != ''">
+                AND u.user_tag LIKE CONCAT('%',#{user.userTag,jdbcType=CHAR},'%')
+            </if>
         </where>
         GROUP BY ug.id, u.id , u.user_no, u.user_real_cn_name, u.user_real_en_name, u.user_sex, u.user_email,
         u.user_mobile,u.user_tag,u.qq,u.weixin,p.id, p.post_name,u.be_lock,
-        u.expire_time, u.create_time, u.state, u.avatar, u.note
+        u.expire_time, u.create_time, u.create_user_cn_name, u.state, u.avatar, u.note
         ORDER BY u.user_no desc
         LIMIT #{offset,jdbcType=INTEGER}, #{limit,jdbcType=INTEGER}
     </select>
@@ -165,10 +189,34 @@
 		LEFT JOIN sys_user u ON u.id = ug.user_id
 		LEFT JOIN sys_user_position up ON u.id = up.user_id AND up.group_id = ug.group_id
 		LEFT JOIN sys_position p ON  up.position_id = p.id
-        LEFT JOIN sys_user_role AS ur ON u.id = ur.user_id AND ur.org_id = #{groupId,jdbcType=CHAR}
+        LEFT JOIN sys_user_role AS ur ON u.id = ur.user_id AND ur.org_id = #{user.groupId,jdbcType=CHAR}
         LEFT JOIN sys_role AS r ON ur.role_id = r.id
         <where>
-            ug.group_id = #{groupId,jdbcType=CHAR}
+            ug.group_id = #{user.groupId,jdbcType=CHAR}
+            <if test="user != null and user.userName != null and  user.userName != ''">
+                AND u.user_no LIKE CONCAT('%',#{user.userName,jdbcType=CHAR},'%')
+            </if>
+            <if test="user != null and user.userRealCnName != null and  user.userRealCnName != ''">
+                AND u.user_real_cn_name LIKE CONCAT('%',#{user.userRealCnName,jdbcType=CHAR},'%')
+            </if>
+            <if test="user != null and user.userMobile != null and  user.userMobile != ''">
+                AND u.user_mobile LIKE CONCAT('%',#{user.userMobile,jdbcType=CHAR},'%')
+            </if>
+            <if test="user != null and user.userEmail != null and  user.userEmail != ''">
+                AND u.user_email LIKE CONCAT('%',#{user.userEmail,jdbcType=CHAR},'%')
+            </if>
+            <if test="user != null and user.state != null and  user.state != ''">
+                AND u.state = #{user.state,jdbcType=CHAR}
+            </if>
+            <if test="user != null and user.roleName != null and  user.roleName != ''">
+                AND r.role_name LIKE CONCAT('%',#{user.roleName,jdbcType=CHAR},'%')
+            </if>
+            <if test="user != null and user.postName != null and  user.postName != ''">
+                AND p.post_name LIKE CONCAT('%',#{user.postName,jdbcType=CHAR},'%')
+            </if>
+            <if test="user != null and user.userTag != null and  user.userTag != ''">
+                AND u.user_tag LIKE CONCAT('%',#{user.userTag,jdbcType=CHAR},'%')
+            </if>
         </where>
     </select>
     

@@ -18,21 +18,21 @@ public interface SysUserMapper extends MBaseMapper<SysUser> {
 	/**
 	 * 根据组织获取用户信息
 	 *
-	 * @param groupId 组织ID
+	 * @param user 用户信息
 	 * @param limit   偏移量
 	 * @param offset  当前页数
 	 * @return
 	 */
-	List<SysUser> searchByGroup(@Param("groupId") String groupId, @Param("limit") int limit,
+	List<SysUser> searchByGroup(@Param("user") UserDto user, @Param("limit") int limit,
 			@Param("offset") int offset);
 
 	/**
 	 * 根据组织获取用户信息的数量
 	 *
-	 * @param groupId 组织ID
+	 * @param user 用户信息
 	 * @return
 	 */
-	int countByGroup(@Param("groupId") String groupId);
+	int countByGroup(@Param("user") UserDto user);
 
 	/**
 	 * 获取未分配组织的用户列表

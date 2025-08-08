@@ -251,7 +251,12 @@ public class UserController extends MBaseController<UserDto> {
         if (Checker.beNotNull(positionDto)) {
             u.setPostName(positionDto.getPostName());
         }
-        u.setGroupName(URLUtil.decode(currentUserGroupName()));
+        String groupName = URLUtil.decode(currentUserGroupName());
+        u.setGroupName(groupName);
+        if (groupName.contains("-")) {
+            u.setDepartName(groupName.split("-")[1].trim());
+        }
+//        u.setGroupName(URLUtil.decode(currentUserGroupName()));
         u.setGroupId(currentUserGroupId());
 
         return u;

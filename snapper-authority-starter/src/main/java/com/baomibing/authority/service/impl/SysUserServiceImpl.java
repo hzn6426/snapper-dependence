@@ -65,13 +65,6 @@ public class SysUserServiceImpl extends MBaseServiceImpl<SysUserMapper, SysUser,
 	@Transactional
 	@Override
 	public void doSave(UserDto user) {
-		if (Boolean.TRUE.equals(user.getBeMultiLogin())) {
-			throw new ServerRuntimeException(AuthorizationExceptionEnum.THE_VERSION_CAN_NOT_SUPPORT_MULTI_LOGIN);
-		}
-//		int count = baseMapper.selectCount(lambdaQuery());
-//		if (count > SystemConst.MAX_USER_NUMBER) {
-//			throw new ServerRuntimeException(AuthorizationExceptionEnum.THE_VERSION_CAN_NOT_CREATE_EXCEED_USER, SystemConst.MAX_USER_NUMBER);
-//		}
 		SysUser dbUser = this.baseMapper.selectOne(new QueryWrapper<SysUser>().eq("user_no", user.getUserName()));
 		if (Checker.beNotNull(dbUser)) {
 			throw new ServerRuntimeException(AuthorizationExceptionEnum.USER_NAME_HAS_EXIST, user.getUserName());
@@ -87,13 +80,6 @@ public class SysUserServiceImpl extends MBaseServiceImpl<SysUserMapper, SysUser,
 	public void doUpdate(UserDto user) {
 		Assert.CheckArgument(user);
 		Assert.CheckArgument(user.getUserName());
-		if (Boolean.TRUE.equals(user.getBeMultiLogin())) {
-			throw new ServerRuntimeException(AuthorizationExceptionEnum.THE_VERSION_CAN_NOT_SUPPORT_MULTI_LOGIN);
-		}
-//		int count = baseMapper.selectCount(lambdaQuery());
-//		if (count > SystemConst.MAX_USER_NUMBER) {
-//			throw new ServerRuntimeException(AuthorizationExceptionEnum.THE_VERSION_CAN_NOT_CREATE_EXCEED_USER, SystemConst.MAX_USER_NUMBER);
-//		}
 		UserDto dbUser = super.getIt(user.getId());
 		assertBeLock(dbUser);
 		user.setUserPasswd(null);
@@ -117,7 +103,7 @@ public class SysUserServiceImpl extends MBaseServiceImpl<SysUserMapper, SysUser,
 		return Checker.beNotNull(user) ? mapper2v(user) : null;
 	}
 
-	@Action(value = PermActionConst.USER_SEARCH, ignoreGroupScope = true)
+	@Action(value = PermActionConst.USER_SEARCH)
 	@ActionConnect(value = {"countByCondition","searchByCondition"}, groupAuthColumn = "ug.group_id")
 	@Override
 	public SearchResult<UserDto> search(UserDto user, int pageNumber, int pageSize) {
@@ -144,11 +130,11 @@ public class SysUserServiceImpl extends MBaseServiceImpl<SysUserMapper, SysUser,
 		if (userNotLogin() || Checker.beEmpty(user.getGroupId())) {
 			return new SearchResult<UserDto>(0, vlist);
 		}
-		int count = baseMapper.countByGroup(user.getGroupId());
+		int count = baseMapper.countByGroup(user);
 		if (count == 0) {
 			return new SearchResult<>(count, emptyList());
 		}
-		return new SearchResult<>(count, mapper(baseMapper.searchByGroup(user.getGroupId(), pageSize, offset(pageNumber, pageSize))));
+		return new SearchResult<>(count, mapper(baseMapper.searchByGroup(user, pageSize, offset(pageNumber, pageSize))));
 	}
 
 	@Override
@@ -329,7 +315,7 @@ public class SysUserServiceImpl extends MBaseServiceImpl<SysUserMapper, SysUser,
 		return mapper(baseMapper.listByKeyWordAndTypeOfCompany(userTag, keyWord, companyId));
 	}
 
-	@Action(value = PermActionConst.USER_SEARCH)
+	@Action(value = PermActionConst.USER_LIST_ALL_GROUP_USERS)
 	@ActionConnect(value="listAllGroupUsers", groupAuthColumn = "ug.group_id")
 	@Override
 	public List<UserDto> listAllGroupUsers() {
@@ -404,7 +390,7 @@ public class SysUserServiceImpl extends MBaseServiceImpl<SysUserMapper, SysUser,
 		if (Checker.beEmpty(roleIds) || (Checker.beNotEmpty(roleId) && !Strings.ALL.equals(roleId) && !roleIds.contains(roleId))) {
 			return Lists.newArrayList();
 		}
-		return roleResourceService.listPermMenusAndButtonsByRoleIds(Checker.beEmpty(roleId) ? roleIds : Sets.newHashSet(roleId), beFilterPerm, beFilterNoPerm);
+        return roleResourceService.listPermMenusAndButtonsByRoleIds(Checker.beEmpty(roleId) ? roleIds : Sets.newHashSet(roleId), beFilterPerm, beFilterNoPerm);
 	}
 
 	@Override
