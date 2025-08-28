@@ -15,6 +15,7 @@ import com.google.common.collect.Lists;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * 职位组织委托
@@ -39,5 +40,10 @@ public class SysPositionGroupEntrustServiceImpl extends MBaseServiceImpl<SysPosi
 		Assert.CheckArgument(positionId);
 		this.baseMapper.delete(lambdaQuery().eq(SysPositionGroupEntrust::getPositionId, positionId));
 	}
-	
+
+	@Override
+	public void deleteByPositions(Set<String> positionIds) {
+		Assert.CheckArgument(positionIds);
+		this.baseMapper.delete(lambdaQuery().in(SysPositionGroupEntrust::getPositionId, positionIds));
+	}
 }

@@ -133,18 +133,26 @@ public class SysGroupServiceImpl extends MBaseServiceImpl<SysGroupMapper, SysGro
         assertUsersExist(users);
         if (Checker.beNotEmpty(pid)) {
             assertPositionsExist(Sets.newHashSet(pid));
-            userPositionService.deleteByGroupAndUsers(gid, users);
+            userPositionService.deleteByPositions(Sets.newHashSet(pid));
+//            userPositionService.deleteByUsers( users);
+//            userPositionService.deleteByGroupAndUsers(gid, users);
         }
+        //删除用户与其他组织的关联
+//        userGroupService.deleteByUsers(users);
         //增加用户组织时，Set可能会变，复制一份作为参数
         Set<String> groupUserParam = new HashSet<>(users);
         //查询该组织下是否已存在用户，若已存在则不必重复插入
         addUsersToGroup(groupUserParam, gid);
-        List<UserPositionDto> dtos = new ArrayList<>();
-        users.forEach(user -> {
-            UserPositionDto userPositionDto = new UserPositionDto().setPositionId(pid).setUserId(user).setGroupId(gid);
-            dtos.add(userPositionDto);
-        });
-        userPositionService.saveItBatch(dtos);
+
+        if (Checker.beNotEmpty(pid)) {
+            List<UserPositionDto> dtos = new ArrayList<>();
+            users.forEach(user -> {
+                UserPositionDto userPositionDto = new UserPositionDto().setPositionId(pid).setUserId(user).setGroupId(gid);
+                dtos.add(userPositionDto);
+            });
+            userPositionService.saveItBatch(dtos);
+        }
+
     }
     
     @Override
@@ -181,8 +189,9 @@ public class SysGroupServiceImpl extends MBaseServiceImpl<SysGroupMapper, SysGro
             assertBeLock(u);
         }
         List<UserGroupDto> existGroupUsers = userGroupService.listByUsersAndGroup(users, gid);
-        if (Checker.beNotNull(existGroupUsers)) {
-            users.removeAll(existGroupUsers.stream().map(UserGroupDto::getUserId).collect(Collectors.toSet()));
+        if (Checker.beNotEmpty(existGroupUsers)) {
+            return;
+//            users.removeAll(existGroupUsers.stream().map(UserGroupDto::getUserId).collect(Collectors.toSet()));
         }
         List<UserGroupDto> dtos = new ArrayList<>();
         users.forEach(user -> {
@@ -314,7 +323,7 @@ public class SysGroupServiceImpl extends MBaseServiceImpl<SysGroupMapper, SysGro
         return mapper(baseMapper.selectList(lambdaQuery().eq(SysGroup::getBeDeleted, false)
         .likeRight(SysGroup::getId, gid)));
     }
-
+    
     @Action(value = PermActionConst.GROUP_TREE_ALL_GROUPS_AND_USERS)
     @ActionConnect(value = PermConnectConst.SELECT_LIST, groupAuthColumn = "id")
     @Override
@@ -424,7 +433,7 @@ public class SysGroupServiceImpl extends MBaseServiceImpl<SysGroupMapper, SysGro
                 }
 
                 //key为唯一，存在一个用户位于两个组织，此处设置组织ID+用户ID的方式
-                pGroup.getChildren().add(new CommonTreeWrap().setKey(pid + "#" + u.getUserName())
+                pGroup.getChildren().add(new CommonTreeWrap().setKey(pid + "#" + u.getId())
                         .setTitle(u.getUserRealCnName() + state).setParentId(pid).setParentGroupName(pGroup.getTitle()).setTag(UserGroupEnum.USER.name()).setIsLeaf(true));
             }
         });

@@ -61,7 +61,6 @@ public class SysUserUsetServiceImpl extends MBaseServiceImpl<SysUserUsetMapper, 
 	@Override
 	public void saveFromUset(String usetId, List<UserGroupDto> userGroups) {
 		Assert.CheckArgument(usetId);
-		Assert.CheckArgument(userGroups);
 		UsetDto uset = usetService.getIt(usetId);
 		// 检查userId合法性
 		Assert.CheckArgument(uset, ExceptionEnum.OBJECT_IS_NULL, usetId);

@@ -5,6 +5,7 @@ package com.baomibing.authority.service.impl;
 import com.baomibing.authority.constant.enums.ResourceTypeEnum;
 import com.baomibing.authority.dto.BusinessPermDto;
 import com.baomibing.authority.dto.ButtonDto;
+import com.baomibing.authority.dto.MenuDto;
 import com.baomibing.authority.dto.ResourceApiDto;
 import com.baomibing.authority.entity.SysButton;
 import com.baomibing.authority.mapper.SysButtonMapper;
@@ -97,6 +98,12 @@ public class SysButtonServiceImpl extends MBaseServiceImpl<SysButtonMapper, SysB
     public void saveOrUpdateButton(ButtonDto button) {
         Assert.CheckArgument(button);
         ButtonDto dbButton = super.getIt(button.getId());
+        if (Checker.beEmpty(button.getSubMenu())) {
+            MenuDto menu = menuService.getIt(button.getMenuId());
+            if (Checker.beNotNull(menu)) {
+                button.setSubMenu(menu.getName());
+            }
+        }
         if (Checker.beNull(dbButton)) {
             saveButton(button);
         } else {

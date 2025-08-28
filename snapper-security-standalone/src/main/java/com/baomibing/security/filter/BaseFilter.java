@@ -36,6 +36,7 @@ import java.text.ParseException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import static com.baomibing.authority.jwt.JwtUtil.decryptBase64;
 import static com.baomibing.tool.constant.PermConstant.RESOURCE_NO_NEED_ROLE;
@@ -249,8 +250,21 @@ public abstract class BaseFilter extends OncePerRequestFilter {
         }
     }
 
+    protected String handleGetUri(String uri) {
+        String url = uri;
+
+        int index = url.lastIndexOf("/");
+        String charsAfterSlash = url.substring(index + 1);
+        if (Checker.beNotEmpty(charsAfterSlash) && charsAfterSlash.equals(CharacterUtil.justLeftNumbers(charsAfterSlash))) {
+            url = url.replace(charsAfterSlash, Strings.BRACE);
+        }
+        return url;
+    }
+
+
     protected String findCacheKey(HttpServletRequest request) {
         String url = request.getRequestURI();
+        url = url.replaceAll("/wapi/","/api/");
         String method = request.getMethod();
         String authorizationCacheKey = UserKey.buttonPermKey(method,url) + "*";
         Set<String> keys = ObjectUtil.nullIfEmptySet(cacheService.keys(authorizationCacheKey));
@@ -265,20 +279,20 @@ public abstract class BaseFilter extends OncePerRequestFilter {
             }
         }
         if (Checker.beEmpty(matchedCacheKey)) {
+            url = handleGetUri(url);
             //注意匹配/xxx/** 和 /xxx/{123} 模式
-            int index = url.lastIndexOf("/");
-            String charsAfterSlash = url.substring(index + 1);
-            if (Checker.beNotEmpty(charsAfterSlash) && charsAfterSlash.equals(CharacterUtil.justLeftNumbers(charsAfterSlash))) {
-                url = url.replace(charsAfterSlash, Strings.BRACE);
+//            int index = url.lastIndexOf("/");
+//            String charsAfterSlash = url.substring(index + 1);
+//            if (Checker.beNotEmpty(charsAfterSlash) && charsAfterSlash.equals(CharacterUtil.justLeftNumbers(charsAfterSlash))) {
+//                url = url.replace(charsAfterSlash, Strings.BRACE);
                 String refKey = CACHE_API_PREFIX + method + Strings.DOUBLE_AT + url;
                 if (Boolean.TRUE.equals(cacheService.hasKey(refKey))) {
                     matchedCacheKey = refKey;
                 }
-            }
+//            }
         }
         return matchedCacheKey;
     }
-
     protected void verifyAuthorization(HttpServletRequest request, String userCacheAuths) {
         String matchedCacheKey = findCacheKey(request);
         //没有匹配上，说明当前的请求没有权限

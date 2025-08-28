@@ -52,6 +52,13 @@ public class SysPositionRoleServiceImpl extends MBaseServiceImpl<SysPositionRole
 		this.baseMapper.delete(lambdaQuery().eq(SysPositionRole::getPositionId, positionId));
 	}
 
+
+	@Override
+	public void deleteByPositions(Set<String> positionIds) {
+		Assert.CheckArgument(positionIds);
+		this.baseMapper.delete(lambdaQuery().in(SysPositionRole::getPositionId, positionIds));
+	}
+
 	@Override
 	public void deleteByRoles(Set<String> roles) {
 		Assert.CheckArgument(roles);

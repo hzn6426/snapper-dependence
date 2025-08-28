@@ -4,7 +4,6 @@ package com.baomibing.authority.service.impl;
 import com.baomibing.authority.action.PositionAction;
 import com.baomibing.authority.constant.PermActionConst;
 import com.baomibing.authority.constant.PermConnectConst;
-import com.baomibing.authority.constant.SystemConst;
 import com.baomibing.authority.constant.enums.PositionPermScopeEnum;
 import com.baomibing.authority.dto.*;
 import com.baomibing.authority.entity.SysPosition;
@@ -42,6 +41,8 @@ public class SysPositionServiceImpl extends MBaseServiceImpl<SysPositionMapper, 
 	@Autowired private SysGroupService groupService;
 	@Autowired private SysPositionUserEntrustService puserEntrustService;
 	@Autowired private SysPositionGroupEntrustService pgroupEntrustService;
+	@Autowired private SysPositionRoleService positionRoleService;
+
 
 	@Action(value = PermActionConst.POSITION_SEARCH)
 	@ActionConnect(value = {PermConnectConst.SELECT_LIST,PermConnectConst.SELECT_COUNT}, groupAuthColumn = "org_id")
@@ -79,10 +80,6 @@ public class SysPositionServiceImpl extends MBaseServiceImpl<SysPositionMapper, 
 	@Override
 	public void savePosition(PositionDto positionDto) {
 		Assert.CheckArgument(positionDto);
-		int count = baseMapper.selectCount(lambdaQuery());
-		if (count > SystemConst.MAX_POSITION_NUMBER) {
-			throw new ServerRuntimeException(AuthorizationExceptionEnum.THE_VERSION_CAN_NOT_CREATE_EXCEED_POSITION, SystemConst.MAX_POSITION_NUMBER);
-		}
 		GroupDto group = groupService.getIt(positionDto.getOrgId());
 		if (Checker.beNull(group)) {
 			throw new ServerRuntimeException(AuthorizationExceptionEnum.CANNOT_FIND_THE_ID_OF_GROUP,
@@ -135,10 +132,6 @@ public class SysPositionServiceImpl extends MBaseServiceImpl<SysPositionMapper, 
 	@Override
 	public void updatePosition(PositionDto positionDto) {
 		Assert.CheckArgument(positionDto.getId());
-		int count = baseMapper.selectCount(lambdaQuery());
-		if (count > SystemConst.MAX_POSITION_NUMBER) {
-			throw new ServerRuntimeException(AuthorizationExceptionEnum.THE_VERSION_CAN_NOT_CREATE_EXCEED_POSITION, SystemConst.MAX_POSITION_NUMBER);
-		}
 		PositionDto dbPosition = super.getIt(positionDto.getId());
 		assertBeLock(dbPosition);
 		updateIt(positionDto);
@@ -202,8 +195,12 @@ public class SysPositionServiceImpl extends MBaseServiceImpl<SysPositionMapper, 
 			assertBeLock(position);
 		}
 		userPositionService.deleteByPositions(pids);
+		positionRoleService.deleteByPositions(pids);
+		puserEntrustService.deleteByPositions(pids);
+		pgroupEntrustService.deleteByPositions(pids);
 		deletes(pids);
 	}
+
 
 	@Action(value = PermActionConst.GROUP_TREE_ALL_GROUPS_AND_POSITIONS)
 	@ActionConnect(value = PermConnectConst.SELECT_LIST, groupAuthColumn = "org_id")
@@ -231,5 +228,4 @@ public class SysPositionServiceImpl extends MBaseServiceImpl<SysPositionMapper, 
 		entrustUids.addAll(entrustGids);
 		return entrustUids;
 	}
-
 }

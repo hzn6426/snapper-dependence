@@ -35,6 +35,13 @@ public interface SysPositionRoleService extends MBaseService<PositionRoleDto> {
 	void deleteByPosition(String positionId);
 
 	/**
+	 * 根据职位ID列表删除职位角色关系
+	 *
+	 * @param positionIds 职位ID列表
+	 */
+	void deleteByPositions(Set<String> positionIds);
+
+	/**
 	 * 根据角色ID列表删除角色职位关联
 	 *
 	 * @param roles 角色ID列表

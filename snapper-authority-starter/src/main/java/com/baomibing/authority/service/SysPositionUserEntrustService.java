@@ -41,4 +41,11 @@ public interface SysPositionUserEntrustService extends MBaseService<PositionUser
 	 */
 	void deleteByPosition(String positionId);
 
+	/**
+	 * 根据职位ID列表删除职位对应的用户委托
+	 *
+	 * @param positionIds 职位ID列表
+	 */
+	void deleteByPositions(Set<String> positionIds);
+
 }

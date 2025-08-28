@@ -250,8 +250,10 @@
     </select>
 
     <select id="listByKeyWordAndType" resultType="com.baomibing.authority.entity.SysUser">
-        SELECT id,user_no,user_real_cn_name,user_real_en_name
+        SELECT id,user_no,user_real_cn_name,user_real_en_name,ug.group_id,g.group_name
         FROM sys_user
+        INNER JOIN sys_user_group ug ON ug.user_id = u.id
+        INNER JOIN sys_group g ON g.id = ug.group_id
         WHERE state = 'ACTIVE' AND be_search = 1
         <if test="userTag != null and  userTag != ''">
             AND FIND_IN_SET(#{userTag},user_tag)

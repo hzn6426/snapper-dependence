@@ -62,7 +62,10 @@ public class SysPositionUserEntrustServiceImpl extends MBaseServiceImpl<SysPosit
 		this.baseMapper.delete(lambdaQuery().eq(SysPositionUserEntrust::getPositionId, positionId));
 
 	}
-	
-	
 
+	@Override
+	public void deleteByPositions(Set<String> positionIds) {
+		Assert.CheckArgument(positionIds);
+		this.baseMapper.delete(lambdaQuery().in(SysPositionUserEntrust::getPositionId, positionIds));
+	}
 }
