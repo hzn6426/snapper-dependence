@@ -55,7 +55,6 @@ public class SysUserServiceImpl extends MBaseServiceImpl<SysUserMapper, SysUser,
 	@Autowired private SysUserRoleService userRoleService;
 	@Autowired private SysUserPositionService userPositionService;
 	@Autowired private SysUserGroupService userGroupService;
-	@Autowired private SysUserBusinessPermService userBusinessPermService;
 	@Autowired private SysPositionUserEntrustService positionUserEntrustService;
 	@Autowired private SysGroupService groupService;
 	@Autowired private SysRoleService roleService;
@@ -163,7 +162,6 @@ public class SysUserServiceImpl extends MBaseServiceImpl<SysUserMapper, SysUser,
 		userRoleService.deleteByUsers(uids);
 		userGroupService.deleteByUsers(uids);
 		userPositionService.deleteByUsers(uids);
-		userBusinessPermService.deleteByUsers(uids);
 		positionUserEntrustService.deleteByUsers(uids);
 		roleService.deleteDefaultsByUsers(uids);
 		super.deletes(uids);

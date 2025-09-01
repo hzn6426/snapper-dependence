@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2018-2023, zening (316279828@qq.com).
+ * Copyright (c) 2018-2025, zening (316279828@qq.com).
  * <p>
  * Any unauthorised copying, selling, transferring, distributing, transmitting, renting,
  * or modifying of the Software is considered an infringement.
@@ -31,12 +31,7 @@ public class UserUsetController extends MBaseController<UserRoleDto> {
 
 	@Autowired
 	private SysUserUsetService userUsetService;
-	
-//	@PostMapping("saveFromUser")
-//	public void saveFromUser(@RequestBody UserRoleVo userRole) {
-//		Assert.CheckArgument(userRole);
-//		userRoleService.saveFromUser(userRole.getOrgId(), userRole.getUserId(), userRole.getRoleIds());
-//	}
+
 	@ULog("用户组设置用户")
 	@PostMapping("saveFromUset")
 	public void saveFromRole(@RequestBody UsetUserVo usetUser) {

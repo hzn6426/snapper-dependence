@@ -5,11 +5,11 @@
   <parent>
     <groupId>com.baomibing</groupId>
     <artifactId>snapper-dependence</artifactId>
-    <version>3.2.4</version>
+    <version>3.3.0</version>
   </parent>
   <groupId>com.baomibing</groupId>
   <artifactId>snapper-feign-starter</artifactId>
-  <version>3.2.4</version>
+  <version>3.3.0</version>
   <licenses>
     <license>
       <name>The Apache License, Version 2.0</name>

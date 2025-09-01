@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2018-2023, zening (316279828@qq.com).
+ * Copyright (c) 2018-2025, zening (316279828@qq.com).
  * <p>
  * Any unauthorised copying, selling, transferring, distributing, transmitting, renting,
  * or modifying of the Software is considered an infringement.
@@ -30,7 +30,7 @@ import java.util.Set;
 /**
  * SchemaController
  *
- * @author zening 2023/5/6 13:39
+ * @author zening
  * @version 1.0.0
  **/
 @RequestMapping(path = "/api/dataPermColumn", consumes = {"application/json", "application/x-www-form-urlencoded"}, produces = MediaType.APPLICATION_JSON_VALUE)

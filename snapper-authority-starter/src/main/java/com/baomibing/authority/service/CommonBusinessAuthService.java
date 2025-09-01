@@ -55,19 +55,4 @@ public interface CommonBusinessAuthService  {
 	  */
 	 String getPermIdByAction(String action);
 
-	/**
-	 * 获取用户的数据权限表达式
-	 * @param user
-	 * @param permId
-	 * @return
-	 */
-	List<DataPermWrap> getEntrustDataPerm(User user, String permId);
-
-	/**
-	 * 获取用户的排除列信息
-	 * @param user
-	 * @param permId
-	 * @return
-	 */
-	List<ColumnPermWrap> getEntrustColumnPerm(User user, String permId);
 }

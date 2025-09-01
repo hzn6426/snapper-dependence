@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2018-2023, zening (316279828@qq.com).
+ * Copyright (c) 2018-2025, zening (316279828@qq.com).
  * <p>
  * Any unauthorised copying, selling, transferring, distributing, transmitting, renting,
  * or modifying of the Software is considered an infringement.
@@ -45,15 +45,10 @@ produces = MediaType.APPLICATION_JSON_VALUE)
 public class ResourceController extends MBaseController<RoleResourceDto> {
 
 	@Autowired private SysRoleResourceService roleResourceService;
-	@Autowired private SysUserBusinessPermService userBusinessPermService;
-	@Autowired private SysUsetBusinessPermService usetBusinessPermService;
 	@Autowired private SchemaService schemaService;
 	@Autowired private SysBusinessPermService businessPermService;
 	@Autowired private CacheService cacheService;
-	@Autowired private SysUserDataPermService userDataPermService;
-	@Autowired private SysUsetDataPermService usetDataPermService;
-	@Autowired private SysUserColumnPermService userColumnPermService;
-	@Autowired private SysUsetColumnPermService usetColumnPermService;
+
 	
 
 	/**
@@ -171,138 +166,7 @@ public class ResourceController extends MBaseController<RoleResourceDto> {
 		return roleResourceService.listPermMenusAndButtonsForBusinessPermByUset(usetId);
 	}
 
-	/**
-	 * 根据权限ID及用户ID获取用户对应权限的委托列表
-	 * 
-	 * @param permId 权限ID
-	 * @param uid    用户ID
-	 * @return
-	 */
-	@GetMapping("/listPermEntrustsByUser")
-	public List<String> listPermEntrustsByUser(@RequestParam String permId, @RequestParam String uid, @RequestParam String orgId) {
-		if (Checker.beEmpty(permId) || Checker.beEmpty(uid) || Checker.beEmpty(orgId)) {
-			return Lists.newArrayList();
-		}
-		List<String> userIdEntrusts = userBusinessPermService.listUserEntrustIdsByPerm(orgId, uid, permId);
-		List<String> groupIdEntrusts = userBusinessPermService.listGroupEntrustIdsByPerm(orgId, uid, permId);
-		List<String> targets = Lists.newArrayList(userIdEntrusts);
-		targets.addAll(groupIdEntrusts);
-		return targets;
-	}
 
-
-	/**
-	 * 根据权限ID及用户ID获取用户对应权限的排除的排除的委托列表
-	 *
-	 * @param permId 权限ID
-	 * @param uid    用户ID
-	 * @return
-	 */
-	@GetMapping("/listPermExceptEntrustsByUser")
-	public List<String> listPermExceptEntrustsByUser(@RequestParam String permId, @RequestParam String uid, @RequestParam String orgId) {
-		if (Checker.beEmpty(permId) || Checker.beEmpty(uid) || Checker.beEmpty(orgId)) {
-			return Lists.newArrayList();
-		}
-		List<String> userIdEntrusts = userBusinessPermService.listUserExceptEntrustIdsByPerm(orgId, uid, permId);
-		List<String> groupIdEntrusts = userBusinessPermService.listGroupExceptEntrustIdsByPerm(orgId, uid, permId);
-		List<String> targets = Lists.newArrayList(userIdEntrusts);
-		targets.addAll(groupIdEntrusts);
-		return targets;
-	}
-
-
-
-	/**
-	 * 根据ID及用户组ID获取对应权限的委托列表
-	 * @param permId 权限ID
-	 * @param usetId 用户组ID
-	 * @return
-	 */
-	@GetMapping("/listPermEntrustsByUset")
-	public List<String> listPermEntrustByUset(@RequestParam String permId, @RequestParam String usetId) {
-		if (Checker.beEmpty(permId) || Checker.beEmpty(usetId)) {
-			return Lists.newArrayList();
-		}
-		List<String> userIdEntrusts = usetBusinessPermService.listUserEntrustIdsByPerm(usetId, permId);
-		List<String> groupIdEntrusts = usetBusinessPermService.listGroupEntrustIdsByPerm(usetId, permId);
-		List<String> targets = Lists.newArrayList(userIdEntrusts);
-		targets.addAll(groupIdEntrusts);
-		return targets;
-	}
-
-	/**
-	 * 根据ID及用户组ID获取对应权限的排除的委托列表
-	 * @param permId 权限ID
-	 * @param usetId 用户组ID
-	 * @return
-	 */
-	@GetMapping("/listPermExceptEntrustsByUset")
-	public List<String> listPermExceptEntrustByUset(@RequestParam String permId, @RequestParam String usetId) {
-		if (Checker.beEmpty(permId) || Checker.beEmpty(usetId)) {
-			return Lists.newArrayList();
-		}
-		List<String> userIdEntrusts = usetBusinessPermService.listUserExceptEntrustIdsByPerm(usetId, permId);
-		List<String> groupIdEntrusts = usetBusinessPermService.listGroupExceptEntrustIdsByPerm(usetId, permId);
-		List<String> targets = Lists.newArrayList(userIdEntrusts);
-		targets.addAll(groupIdEntrusts);
-		return targets;
-	}
-
-	/**
-	 * 存储用户数据权限
-	 * @param perm 数据权限
-	 */
-	@ULog("资源-保存用户数据权限")
-	@PostMapping("/saveDataPerm")
-	public void saveDataPerm(@RequestBody UserDataPermDto perm) {
-		userDataPermService.saveUserDataPerm(perm);
-	}
-
-	@ULog("资源-保存用户组数据权限")
-	@PostMapping("/saveUsetDataPerm")
-	public void saveUsetDataPerm(@RequestBody UsetDataPermDto perm) {
-		usetDataPermService.saveUserDataPerm(perm);
-	}
-
-	@GetMapping("/getUserDataPerm")
-	public UserDataPermDto listUserDataPerm(@RequestParam String uid, @RequestParam String orgId, @RequestParam String permId) {
-		UserDataPermDto perm =  userDataPermService.getUserDataPerm(uid, orgId, permId);
-		if (Checker.beNotNull(perm)) {
-			perm.setSearchExpresses(JSONArray.parseArray(perm.getPermExpress(), AdvanceSearchVo.class));
-		}
-		return perm;
-	}
-
-	@GetMapping("/getUsetDataPerm")
-	public UsetDataPermDto listUsetDataPerm(@RequestParam String usetId, @RequestParam String permId) {
-		UsetDataPermDto perm =  usetDataPermService.getUsetDataPerm(usetId, permId);
-		if (Checker.beNotNull(perm)) {
-			perm.setSearchExpresses(JSONArray.parseArray(perm.getPermExpress(), AdvanceSearchVo.class));
-		}
-		return perm;
-	}
-
-	/**
-	 * 保存用户业务权限
-	 * 
-	 * @param perm 业务权限
-	 */
-	@ULog("资源-保存用户业务权限")
-	@PostMapping("/saveBusinessPerm")
-	public void saveBusinessPerm(@RequestBody UserBusinessPermDto perm) {
-		userBusinessPermService.saveUserBusinessPerm(perm);
-	}
-
-
-	/**
-	 * 保存用户组业务权限
-	 * @param perm
-	 */
-	@ULog("资源-保存用户组业务权限")
-	@PostMapping("/saveUsetBusinessPerm")
-	public void saveUsetBusinessPerm(@RequestBody UsetBusinessPermDto perm) {
-		usetBusinessPermService.saveUserBusinessPerm(perm);
-	}
 
 	@GetMapping("fetchActionMapperByPerm")
 	public ActionMapper fetchByAction(@RequestParam String permId) {
@@ -343,35 +207,6 @@ public class ResourceController extends MBaseController<RoleResourceDto> {
 		return schemaService.fetchColumnByTable(Sets.newHashSet(Splitter.on(Strings.COMMA).splitToList(tables)), beFresh);
 	}
 
-	@ULog("资源-保存用户列权限")
-	@PostMapping("saveUserColumnPerm")
-	public void saveUserColumnPerm(@RequestBody UserColumnPermDto perm) {
-		userColumnPermService.saveColumnPerm(perm);
-	}
-
-	@ULog("资源-保存用户组列权限")
-	@PostMapping("saveUsetColumnPerm")
-	public void saveUsetColumnPerm(@RequestBody UsetColumnPermDto perm) {
-		usetColumnPermService.saveColumnPerm(perm);
-	}
-
-	@GetMapping("listUserColumnPerm")
-	public List<ActionSelectTable> listUserColumnPerm(@RequestParam String uid, @RequestParam String orgId, @RequestParam String permId) {
-		UserColumnPermDto perm = userColumnPermService.getUserColumnPerm(uid, orgId, permId);
-		if (Checker.beNull(perm)) {
-			return  null;
-		}
-		return JSONArray.parseArray(perm.getColumnExpress(), ActionSelectTable.class);
-	}
-
-	@GetMapping("listUsetColumnPerm")
-	public List<ActionSelectTable> listUsetColumnPerm(@RequestParam String usetId, @RequestParam String permId) {
-		UsetColumnPermDto perm = usetColumnPermService.getUsetColumnPerm(usetId, permId);
-		if (Checker.beNull(perm)) {
-			return null;
-		}
-		return JSONArray.parseArray(perm.getColumnExpress(), ActionSelectTable.class);
-	}
 
 	@GetMapping("fetchColumnActionMapperByPerm")
 	public ActionMapper fetchColumnActionMapperByPerm(@RequestParam String permId) {
@@ -425,18 +260,4 @@ public class ResourceController extends MBaseController<RoleResourceDto> {
 		return null;
 	}
 
-	@GetMapping("getUserFunctionDataPerm")
-	public DataPermFunctionVo getUserFunctionDataPerm(@RequestParam String viewType, @RequestParam String orgId, @RequestParam String permId, @RequestParam String usetId) {
-		return roleResourceService.getFunctionDataPerm(viewType,  orgId, permId, usetId);
-	}
-
-	@GetMapping("getUserBusinessDataPerm")
-	public List<DataPermBusinessVo> getUserBusinessDataPerm(@RequestParam String viewType, @RequestParam String orgId, @RequestParam String permId, @RequestParam String usetId) {
-		return roleResourceService.getBusinessDataPerm(viewType, orgId, permId, usetId);
-	}
-
-	@GetMapping("getUserColumnDataPerm")
-	public List<DataPermColumnVo> getUserColumnDataPerm(@RequestParam String viewType, @RequestParam String orgId, @RequestParam String permId, @RequestParam String usetId) {
-		return roleResourceService.getColumnDataPerm(viewType, orgId, permId, usetId);
-	}
 }

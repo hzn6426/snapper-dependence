@@ -24,21 +24,7 @@ public interface SysRoleResourceService extends MBaseService<RoleResourceDto> {
 	 */
 	void refreshPrivileges(String... buttons);
 
-	/**
-	 * 超级管理员获取权限资源ID列表
-	 * 
-	 * @param resourceType 资源类型
-	 * @return
-	 */
-	List<String> listPermResourceIdsBySuper(ResourceTypeEnum resourceType);
 
-	/**
-	 * 根据角色列表获取权限对应的资源ID列表
-	 * 
-	 * @param roleIds 角色ID列表
-	 * @return
-	 */
-//	List<String> listPermResourceIdsByRoles(Set<String> roleIds);
 
 	/**
 	 * 根据角色列表及资源类型获取权限对应的资源ID列表
@@ -49,13 +35,7 @@ public interface SysRoleResourceService extends MBaseService<RoleResourceDto> {
 	 */
 	List<String> listPermResourceIdsByRoles(Set<String> roleIds, ResourceTypeEnum resourceType);
 
-	/**
-	 * 根据角色列表获取权限对应的资源API列表-包括无权限的资源API
-	 * 
-	 * @param roleIds 角色列表
-	 * @return
-	 */
-//	List<ResourceApiDto> listResourceApiByRoles(Set<String> roleIds);
+
 	/**
 	 * 根据角色列表和菜单ID获取对应的权限按钮列表-包括无权限的按钮
 	 * 
@@ -106,13 +86,6 @@ public interface SysRoleResourceService extends MBaseService<RoleResourceDto> {
 	 * @return
 	 */
 	List<MenuDto> listAllPermMenusForSuper(MenuTypeEnum type);
-
-	/**
-	 * 展示所有菜单及菜单下的按钮(后台)-用来授权
-	 * 
-	 * @return //
-	 */
-//	List<MenuDto> listAllMenusAndButtonsForGrant();
 
 	/**
 	 * 展示所有菜单-用来授权
@@ -198,33 +171,4 @@ public interface SysRoleResourceService extends MBaseService<RoleResourceDto> {
 	List<MenuDto> listActionMenusAndButtonsByRoleIds(Set<String> roleIds);
 
 
-	/**
-	 * 获取按钮数据权限
-	 * @param viewType 类型
-	 * @param orgId    用户所在组织
-	 * @param permId   权限ID
-	 * @param usetId   用户组ID
-	 * @return
-	 */
-	DataPermFunctionVo getFunctionDataPerm(String viewType, String orgId, String permId, String usetId);
-
-	/**
-	 * 获取业务数据权限
-	 * @param viewType 类型
-	 * @param orgId    用户所在组织
-	 * @param permId   权限ID
-	 * @param usetId   用户组ID
-	 * @return
-	 */
-	List<DataPermBusinessVo> getBusinessDataPerm(String viewType, String orgId, String permId, String usetId);
-
-	/**
-	 * 获取列数据权限
-	 * @param viewType  类型
-	 * @param orgId     用户所在组织
-	 * @param permId    权限ID
-	 * @param usetId    用户组ID
-	 * @return
-	 */
-	List<DataPermColumnVo> getColumnDataPerm(String viewType, String orgId, String permId, String usetId);
 }

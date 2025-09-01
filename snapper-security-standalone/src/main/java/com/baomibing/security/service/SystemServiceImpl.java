@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2018-2023, zening (316279828@qq.com).
+ * Copyright (c) 2018-2025, zening (316279828@qq.com).
  * <p>
  * Any unauthorised copying, selling, transferring, distributing, transmitting, renting,
  * or modifying of the Software is considered an infringement.
@@ -92,6 +92,8 @@ public class SystemServiceImpl implements SystemService {
             //缓存登录用户选择的组织ID
             cacheService.set(UserKey.userSelectGroupKey(userName, tag), orgId, 30);
         }
+
+
 
         UsernamePasswordAuthenticationToken usernameAuthentication = new UsernamePasswordAuthenticationToken(cacheHashKey, password);
         Authentication authentication = this.authenticationManager.authenticate(usernameAuthentication);

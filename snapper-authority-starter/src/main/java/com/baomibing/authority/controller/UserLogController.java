@@ -1,14 +1,12 @@
 /**
- * Copyright (c) 2018-2023, zening (316279828@qq.com).
+ * Copyright (c) 2018-2025, zening (316279828@qq.com).
  * <p>
  * Any unauthorised copying, selling, transferring, distributing, transmitting, renting,
  * or modifying of the Software is considered an infringement.
  */
 package com.baomibing.authority.controller;
 
-import com.baomibing.authority.dto.HmacLogDto;
 import com.baomibing.authority.dto.UserLogDto;
-import com.baomibing.authority.service.SysHmacLogService;
 import com.baomibing.authority.service.SysUserLogService;
 import com.baomibing.core.common.Assert;
 import com.baomibing.core.common.SearchResult;
@@ -35,7 +33,6 @@ public class UserLogController extends MBaseController<UserLogDto> {
 
 	@Autowired private SysUserLogService logService;
 	@Autowired private Mapper mapper;
-	@Autowired private SysHmacLogService hmacLogService;
 	
 	@PostMapping("/search")
 	public R<UserLogDto> search(@RequestBody PageQuery<UserLogDto> pager) {
@@ -51,21 +48,8 @@ public class UserLogController extends MBaseController<UserLogDto> {
 	@PostMapping
 	public void saveLogAsync(@RequestBody UserLogEventWrap logEvent) {
 		Assert.CheckArgument(logEvent);
-		if (logEvent.getBeHmacRequest()) {
-			HmacLogDto hmacLog = new HmacLogDto();
-			hmacLog.setDataFrom(logEvent.getOuterSystem()).setDataTo("ME").setExchangeName(logEvent.getExchangeName())
-					.setExchangeMethod(logEvent.getExchangeMethod()).setExchangeParam(logEvent.getExchangeParam())
-					.setExchangeTime(logEvent.getExchangeTime()).setExchangeUrl(logEvent.getExchangeUrl())
-					.setExceptionMsg(logEvent.getExceptionMsg()).setIpAddress(logEvent.getIpAddress())
-					.setState(logEvent.getState()).setCreateUser(logEvent.getCreateUser())
-					.setCreateUserCnName(logEvent.getCreateUserCnName()).setUpdateUserCnName(logEvent.getUpdateUserCnName())
-					.setUpdateUser(logEvent.getUpdateUser())
-					.setDataContent(logEvent.getResponseData()).setSystemTag(logEvent.getSystemTag());
-			hmacLogService.doSaveLogAsync(hmacLog);
-		} else {
-			UserLogDto userLog = mapper.map(logEvent, UserLogDto.class);
-			logService.doSaveLogAsync(userLog);
-		}
+		UserLogDto userLog = mapper.map(logEvent, UserLogDto.class);
+		logService.doSaveLogAsync(userLog);
 	}
 	
 }
