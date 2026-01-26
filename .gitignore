@@ -13,3 +13,17 @@ target/
 *.iml
 dubbo-registry/
 logs/
+snapper-authority-starter/.flattened-pom.xml
+snapper-business-starter/.flattened-pom.xml
+snapper-cache-starter/.flattened-pom.xml
+snapper-core-starter/.flattened-pom.xml
+snapper-email/.flattened-pom.xml
+snapper-feign-starter/.flattened-pom.xml
+snapper-gateway-starter/.flattened-pom.xml
+snapper-log-starter/.flattened-pom.xml
+snapper-orm-starter/.flattened-pom.xml
+snapper-security-micro/.flattened-pom.xml
+snapper-security-standalone/.flattened-pom.xml
+snapper-tool/.flattened-pom.xml
+snapper-web-starter/.flattened-pom.xml
+.flattened-pom.xml
