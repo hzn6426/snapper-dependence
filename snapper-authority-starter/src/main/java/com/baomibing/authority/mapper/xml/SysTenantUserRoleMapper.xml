@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright (c) 2020-2025, zening (316279828@qq.com).
+  ~ <p>
+  ~ Licensed under the Apache License, Version 2.0 (the "License"); you may not
+  ~ use this file except in compliance with the License. You may obtain a copy of
+  ~ the License at
+  ~ <p>
+  ~ https://www.apache.org/licenses/LICENSE-2.0
+  ~ <p>
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+  ~ WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+  ~ License for the specific language governing permissions and limitations under
+  ~ the License.
+  -->
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.baomibing.authority.mapper.SysTenantUserRoleMapper">
+
+    <!-- 根据组织ID和用户名获取用户角色列表 -->
+    <select id="listRolesByGroupAndUserName"  resultType="com.baomibing.authority.entity.SysTenantRole">
+        SELECT r.id,  r.role_name 
+        FROM sys_tenant_role AS r
+        INNER JOIN sys_tenant_user_role ur ON r.id = ur.role_id
+        INNER JOIN sys_tenant_user u ON ur.user_id = u.id
+        WHERE u.user_no =  #{userName,jdbcType=CHAR} AND ur.org_id = #{orgId,jdbcType=CHAR} and u.tenant_id = #{tenantId,jdbcType=CHAR}
+    </select>
+    
+    <!-- 根据组织ID和用户ID删除角色用户关系 -->
+    <delete id="deleteByGroupAndUser" parameterType="java.lang.String">
+        DELETE FROM sys_tenant_user_role  WHERE user_id = #{userId,jdbcType=CHAR} AND org_id = #{orgId,jdbcType=CHAR} and tenant_id = #{tenantId,jdbcType=CHAR}
+    </delete>
+    
+     <!-- 根据组织ID和用户ID列表删除角色用户关系 -->
+    <delete id="deleteByGroupAndUsers">
+        DELETE FROM sys_tenant_user_role  WHERE org_id = #{orgId,jdbcType=CHAR} AND tenant_id = #{tenantId,jdbcType=CHAR} AND user_id  IN
+		<foreach collection="userIds" index="index" item="item" open="(" separator="," close=")">
+            #{item}       
+        </foreach>
+    </delete>
+    
+    <!-- 根据组织ID和用户名获取用户角色列表 -->
+    <select id="listRolesByGroupAndUser" parameterType="java.lang.String" resultType="com.baomibing.authority.entity.SysTenantRole">
+        SELECT r.id, r.role_name
+        FROM sys_tenant_role AS r
+        INNER JOIN sys_tenant_user_role ur ON r.id = ur.role_id
+        WHERE ur.user_id =  #{userId,jdbcType=CHAR} AND ur.org_id = #{orgId,jdbcType=CHAR} and ur.tenant_id = #{tenantId,jdbcType=CHAR}
+    </select>
+    
+    <!-- 删除用户id 角色id列表对应的用户角色关系 -->
+    <delete id="deleteByMapUserIdAndRoleIdList" parameterType="java.util.Map">
+        DELETE FROM sys_tenant_user_role  WHERE user_id = #{userId,jdbcType=CHAR} AND org_id = #{orgId,jdbcType=CHAR} AND tenant_id = #{tenantId,jdbcType=CHAR} AND role_id in
+        <foreach collection="roleIdList" index="index" item="item" open="(" separator="," close=")">
+            #{item}       
+        </foreach>
+    </delete>
+    
+    <!-- 根据角色id列表和用户id列表封装的map删除用户角色关系映射 -->
+    <delete id="deleteByMapRoleIdAndUserIdList" parameterType="java.util.Map">
+        DELETE FROM sys_tenant_user_role  WHERE role_id = #{roleId,jdbcType=CHAR} AND org_id = #{orgId,jdbcType=CHAR} AND tenant_id = #{tenantId,jdbcType=CHAR} AND user_id in
+        <foreach collection="userIdList" index="index" item="item" open="(" separator="," close=")">
+            #{item}       
+        </foreach>
+    </delete>
+
+    <!-- 根据组织ID和角色ID获取用户 -->
+    <select id="listUserByGroupAndRole" parameterType="java.lang.String" resultType="com.baomibing.authority.entity.SysTenantUser">
+        SELECT r.id,r.user_no,r.user_real_en_name,r.user_passwd
+        FROM sys_tenant_user_role AS ur
+        INNER JOIN sys_tenant_user r ON r.id = ur.user_id
+        WHERE ur.role_id = #{roleId} AND ur.org_id = #{orgId,jdbcType=CHAR} AND ur.tenant_id = #{tenantId,jdbcType=CHAR}
+    </select>
+    
+    <!-- 根据角色id删除组织对应的角色用户关系 -->
+    <delete id="deleteByGroupAndRole" parameterType="java.lang.String">
+        DELETE FROM sys_tenant_user_role  WHERE role_id = #{roleId,jdbcType=CHAR} AND org_id = #{orgId,jdbcType=CHAR} AND tenant_id = #{tenantId,jdbcType=CHAR}
+    </delete>
+    
+    <!-- 根据角色id删除组织对应的角色用户关系 -->
+    <delete id="deleteByRole" parameterType="java.lang.String">
+        DELETE FROM sys_tenant_user_role  WHERE role_id = #{roleId,jdbcType=CHAR} AND tenant_id = #{tenantId,jdbcType=CHAR}
+    </delete>
+    
+     <!-- 根据角色id列表删除角色组织用户关系 -->
+    <delete id="deleteByGroupAndRoles">
+        DELETE FROM sys_tenant_user_role  WHERE org_id = #{orgId,jdbcType=CHAR} AND  tenant_id = #{tenantId,jdbcType=CHAR} AND role_id  IN
+		<foreach collection="roleIdList" index="index" item="item" open="(" separator="," close=")">
+            #{item}       
+        </foreach>
+    </delete>
+    
+    <!-- 删除角色ID及组织列表对应的用户组织关系 -->
+    <delete id="deleteByRoleAndGroups">
+        DELETE FROM sys_tenant_user_role  WHERE role_id = #{roleId,jdbcType=CHAR} AND  tenant_id = #{tenantId,jdbcType=CHAR} AND org_id  IN
+		<foreach collection="groupIdList" index="index" item="item" open="(" separator="," close=")">
+            #{item}       
+        </foreach>
+    </delete>
+    
+    <!-- 根据角色ID获取与组织关联的用户ID信息 -->
+    <select id="listGroupUsersByRole"  resultType="com.baomibing.authority.entity.SysTenantUser">
+        SELECT u.id,  u.user_no,u.user_real_en_name, CONCAT(GROUP_CONCAT(ur.org_id)) group_id
+        FROM sys_tenant_user_role AS ur
+        INNER JOIN sys_tenant_user u ON u.id = ur.user_id
+        WHERE ur.role_id =  #{rid} and ur.tenant_id = #{tenantId,jdbcType=CHAR}
+        GROUP BY u.id, u.user_no,u.user_real_en_name
+    </select>
+</mapper>

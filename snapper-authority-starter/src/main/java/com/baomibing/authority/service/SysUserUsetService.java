@@ -1,4 +1,20 @@
 
+/*
+ * Copyright (c) 2020-2025, zening (316279828@qq.com).
+ * <p>
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy of
+ * the License at
+ * <p>
+ * https://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
+ */
+
 package com.baomibing.authority.service;
 
 
@@ -71,4 +87,20 @@ public interface SysUserUsetService extends MBaseService<UserUsetDto> {
 	 * @return
 	 */
 	List<String> listUsetRoleIdsByUserAndGroup(String userId, String userGroupId);
+
+    /**
+     * 删除用户组中对应组织的用户列表
+     *
+     * @param orgId 用户组织 ID
+     * @param userIds 用户 ID 列表
+     */
+    void deleteByGroupUsers( String orgId, Set<String> userIds);
+
+    /**
+     * 复制组织用户的用户组
+     * @param uid  待复制的用户
+     * @param gid 待复制的用户组织
+     * @param toUserId 目标用户
+     */
+    void doCopyUserUset(String uid, String gid, String toUserId);
 }

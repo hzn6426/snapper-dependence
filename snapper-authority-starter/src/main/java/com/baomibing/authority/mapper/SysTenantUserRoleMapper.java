@@ -1,0 +1,126 @@
+/*
+ * Copyright (c) 2020-2025, zening (316279828@qq.com).
+ * <p>
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy of
+ * the License at
+ * <p>
+ * https://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
+ */
+
+package com.baomibing.authority.mapper;
+
+import com.baomibing.authority.entity.SysTenantRole;
+import com.baomibing.authority.entity.SysTenantUser;
+import com.baomibing.authority.entity.SysTenantUserRole;
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import org.apache.ibatis.annotations.Param;
+
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+public interface SysTenantUserRoleMapper extends BaseMapper<SysTenantUserRole> {
+
+    /**
+     * 删除用户id为<code>userId</code>的组织对应角色关系信息
+     *
+     * @param orgId 组织ID
+     * @param userId 用户ID
+     * @return
+     */
+    int deleteByGroupAndUser(@Param("tenantId") String tenantId, @Param("orgId") String orgId, @Param("userId") String userId);
+
+    /**
+     * 根据组织ID和用户ID列表删除用户角色关系
+     *
+     * @param orgId 组织ID
+     * @param userIds 用户ID列表
+     */
+    void deleteByGroupAndUsers(@Param("tenantId") String tenantId, @Param("orgId") String orgId, @Param("userIds") Set<String> userIds);
+
+    /**
+     * 根据用户名和组织列出用户所有角色列表
+     * @param orgId 组织ID
+     * @param userName 用户名
+     * @return
+     */
+    List<SysTenantRole> listRolesByGroupAndUserName(@Param("tenantId") String tenantId, @Param("orgId") String orgId, @Param("userName") String userName);
+
+    /**
+     * 根据组织和用户列出角色列表
+     * @param orgId 组织ID
+     * @param userId 用户ID
+     * @return
+     */
+    List<SysTenantRole> listRolesByGroupAndUser(@Param("tenantId") String tenantId, @Param("orgId") String orgId, @Param("userId") String userId);
+
+    /**
+     * 根据用户id列表和角色id列表封装的map删除用户角色关系映射
+     * @param map
+     * @return
+     */
+    int deleteByMapUserIdAndRoleIdList(Map<String, Object> map);
+
+    /**
+     * 根据角色id列表和用户id列表封装的map删除用户角色关系映射
+     * @param map
+     * @return
+     */
+    int deleteByMapRoleIdAndUserIdList(Map<String, Object> map);
+
+    /**
+     * 根据组织ID和角色ID查询用户
+     *
+     * @param orgId 组织ID
+     * @param roleId 角色ID
+     * @return
+     */
+    List<SysTenantUser> listUserByGroupAndRole(@Param("tenantId") String tenantId, @Param("orgId") String orgId, @Param("roleId") String roleId);
+
+    /**
+     * 删除角色id为<code>roleId</code>的组织用户角色关系信息
+     * @param roleId
+     * @return
+     */
+    int deleteByGroupAndRole(@Param("tenantId") String tenantId, @Param("orgId") String orgId, @Param("roleId") String roleId);
+
+    /**
+     * 根据角色删除对应的用户组织角色关系
+     *
+     * @param roleId 角色ID
+     * @return
+     */
+    int deleteByRole(@Param("tenantId") String tenantId, @Param("roleId") String roleId);
+
+    /**
+     * 删除角色ID列表对应的用户组织角色关系信息
+     *
+     * @param roleIds 角色列表
+     * @return
+     */
+    int deleteByGroupAndRoles(@Param("tenantId") String tenantId, @Param("orgId") String orgId, @Param("roleIdList") Set<String> roleIds);
+
+    /**
+     * 删除角色ID及组织列表对应的用户组织关系
+     *
+     * @param roleId   角色ID
+     * @param groupIds 组织ID列表
+     * @return
+     */
+    int deleteByRoleAndGroups(@Param("tenantId") String tenantId, @Param("roleId") String roleId, @Param("groupIdList") Set<String> groupIds);
+
+    /**
+     * 根据角色ID获取与组织关联的用户ID信息
+     *
+     * @param roleId 角色ID
+     * @return
+     */
+    List<SysTenantUser> listGroupUsersByRole(@Param("tenantId") String tenantId, @Param("rid")String roleId);
+}

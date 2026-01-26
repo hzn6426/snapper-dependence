@@ -1,4 +1,20 @@
 
+/*
+ * Copyright (c) 2020-2025, zening (316279828@qq.com).
+ * <p>
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy of
+ * the License at
+ * <p>
+ * https://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
+ */
+
 package com.baomibing.authority.service.impl;
 
 import com.alibaba.fastjson.JSONArray;
@@ -56,12 +72,22 @@ public class SysRoleResourceServiceImpl extends MBaseServiceImpl<SysRoleResource
 	@Autowired private SysUserRoleService userRoleService;
 	@Autowired private SysResourceApiService resourceApiService;
 	@Autowired private SysMenuService menuService;
+	@Autowired private SysButtonService buttonService;
 	@Autowired private SysUsetRoleService usetRoleService;
 	@Autowired private SysRoleService roleService;
+	@Autowired private SysUserBusinessPermService userBusinessPermService;
+	@Autowired private SysUsetUserEntrustService usetUserEntrustService;
+	@Autowired private SysUsetGroupEntrustService usetGroupEntrustService;
+	@Autowired private SysUsetUserExceptEntrustService usetUserExceptEntrustService;
+	@Autowired private SysUsetGroupExceptEntrustService usetGroupExceptEntrustService;
 	@Autowired private SysUserUsetService userUsetService;
+	@Autowired private SysUserDataPermService userDataPermService;
+	@Autowired private SysUsetDataPermService usetDataPermService;
+	@Autowired private SysUserColumnPermService userColumnPermService;
+	@Autowired private SysUsetColumnPermService usetColumnPermService;
 
 	@Override
-	public void refreshPrivileges(String... buttons) {
+	public void refreshPrivileges(String...buttons) {
 		// 已授权(按钮be_unauth = 0)
 		List<ResourceApiDto> apis = this.listAllPermButtonsForGroupRoleIds(Sets.newHashSet(buttons));
 		// 无权限(按钮be_unauth = 1)
@@ -85,6 +111,15 @@ public class SysRoleResourceServiceImpl extends MBaseServiceImpl<SysRoleResource
 			cacheService.set(UserKey.buttonPermKey(a.getReqMethod(), a.getReqUrl()).replace("/api/","/wapi/"), a.getRoleIds());
 
 		});
+	}
+
+	@Override
+	public List<String> listPermResourceIdsBySuper(ResourceTypeEnum resourceType) {
+		List<ResourceApiDto> resourceList = resourceApiService.listByResourceType(resourceType);
+		if (Checker.beEmpty(resourceList)) {
+			return Lists.newArrayList();
+		}
+		return resourceList.stream().map(ResourceApiDto::getResourceId).collect(Collectors.toList());
 	}
 
 
@@ -532,6 +567,8 @@ public class SysRoleResourceServiceImpl extends MBaseServiceImpl<SysRoleResource
 				.filter(b -> Checker.beNotEmpty(b.getPermAction()) && keys.contains(cacheKey + b.getPermAction()))
 				.collect(Collectors.toList());
 
+//		Set<String> menuIds = buttonList.stream().map(b -> b.getMenuId()).collect(Collectors.toSet());
+
 		// 创建map结构用来临时存储对象
 		Map<String, MenuDto> allMenuMap = menuList.stream()
 				.collect(Collectors.toMap(MenuDto::getId, Function.identity(), (key1, key2) -> key2));
@@ -575,6 +612,25 @@ public class SysRoleResourceServiceImpl extends MBaseServiceImpl<SysRoleResource
 
 		List<MenuDto> targetMenus =  deleteNoButtonMenus(tlist, buttonMenuIds);
 		return deleteNoButtonMenus(targetMenus, buttonMenuIds);
+//		return tlist.stream().filter(m -> {
+//			if (buttonMenuIds.contains(m.getId())) {
+//				return true;
+//			}
+//			if (Checker.beEmpty(m.getChildren())) {
+//				return false;
+//			}
+//			return m.getChildren().stream().anyMatch(mc -> buttonMenuIds.contains(mc.getId()) ||
+//					(Checker.beNotEmpty(mc.getChildren()) && mc.getChildren().stream().anyMatch(mcc -> buttonMenuIds.contains(mcc.getId()))));
+//		}).collect(Collectors.toList());
+		//================数据最终结构==========================
+		//  name             permScope        tag
+		// |-系统管理            -             MENU
+		//    |-用户管理         -             MENU
+		//       |-查询     CURRENT_USER      PERM
+		//       |-删除     CURRENT_USER      PERM
+		//       |-修改     CURRENT_USER      PERM
+		//       |-分配角色  CURRENT_USER      PERM
+//        return tlist;
 	}
 
 	private List<MenuDto> deleteNoButtonMenus(List<MenuDto> menuList, Set<String> buttonMenuIds) {
@@ -747,6 +803,7 @@ public class SysRoleResourceServiceImpl extends MBaseServiceImpl<SysRoleResource
 			buttonList = buttonList.stream()
 					.filter(b -> Boolean.FALSE.equals(b.getBeUnauth())).collect(Collectors.toList());
 		}
+
 		// 创建map结构用来临时存储对象
 		Map<String, MenuDto> allMenuMap = menuList.stream()
 				.collect(Collectors.toMap(MenuDto::getId, Function.identity(), (key1, key2) -> key2));
@@ -868,6 +925,7 @@ public class SysRoleResourceServiceImpl extends MBaseServiceImpl<SysRoleResource
 		return deleteNoButtonMenus(targetMenus, buttonMenuIds);
 	}
 
+
 	private DataPermFunctionVo mergePermScope(List<SysButton> buttons) {
 		DataPermFunctionVo dp = new DataPermFunctionVo();
 		String scope = BusinessPermScopeEnum.CURRENT_USER.name();
@@ -906,7 +964,7 @@ public class SysRoleResourceServiceImpl extends MBaseServiceImpl<SysRoleResource
 	}
 
 	private void mergeEntrusts(DataPermFunctionVo dp, List<String> userIdEntrusts, List<String> groupIdEntrusts,
-							   List<String> exceptUserIdEntrusts, List<String> exceptGroupIdEntrusts) {
+											 List<String> exceptUserIdEntrusts, List<String> exceptGroupIdEntrusts) {
 		Set<String> entrusts = Sets.newHashSet();
 		Set<String> exceptEntrusts = Sets.newHashSet();
 		if (Checker.beNotEmpty(userIdEntrusts)) {
@@ -931,7 +989,93 @@ public class SysRoleResourceServiceImpl extends MBaseServiceImpl<SysRoleResource
 		dp.setExceptEntrustIds(exceptEntrusts);
 	}
 
+	@Override
+	public DataPermFunctionVo getFunctionDataPerm(String viewType, String orgId, String permId, String usetId) {
+		if (Checker.beEmpty(viewType) || Checker.beEmpty(orgId) || Checker.beEmpty(permId)) {
+			return null;
+		}
+		DataPermViewEnum dpv = EnumUtils.getEnum(DataPermViewEnum.class, viewType);
+		if (Checker.beNull(dpv)) {
+			return null;
+		}
 
+		DataPermFunctionVo dp = new DataPermFunctionVo();
+		if (dpv == DataPermViewEnum.USER) {
+			List<SysButton> buttons = baseMapper.listUserPermScopeByPerm(orgId, currentUserId(), permId);
+			dp = mergePermScope(buttons);
+			List<String> userIdEntrusts = userBusinessPermService.listUserEntrustIdsByPerm(orgId, currentUserId(), permId);
+			List<String> groupIdEntrusts = userBusinessPermService.listGroupEntrustIdsByPerm(orgId, currentUserId(), permId);
+
+			List<String> exceptUserIdEntrusts = userBusinessPermService.listUserExceptEntrustIdsByPerm(orgId, currentUserId(), permId);
+			List<String> exceptGroupIdEntrusts = userBusinessPermService.listGroupExceptEntrustIdsByPerm(orgId, currentUserId(), permId);
+
+			mergeEntrusts(dp, userIdEntrusts, groupIdEntrusts, exceptUserIdEntrusts, exceptGroupIdEntrusts);
+
+		} else if (dpv == DataPermViewEnum.USET) {
+			Set<String> usetIds = Sets.newHashSet();
+			if (DataPermViewEnum.ALL.name().equals(usetId)) {
+				List<UsetDto> usets = userUsetService.listUsetsByGroupAndUser(orgId, currentUserId());
+				if (Checker.beNotEmpty(usets)) {
+					usetIds.addAll(usets.stream().map(UsetDto::getId).collect(Collectors.toSet()));
+				}
+			} else {
+				usetIds.add(usetId);
+			}
+			if (Checker.beEmpty(usetIds)) {
+				return dp;
+			}
+			List<SysButton> buttons = baseMapper.listUsetPermScopeByPerm(usetIds, permId);
+
+			dp = mergePermScope(buttons);
+
+			List<String> userIdEntrusts = usetUserEntrustService.listEntrustUserCodesByUsetAndPerm(usetIds, permId);
+			List<GroupDto> groups = usetGroupEntrustService.listEntrustGroupsByUsetAndPerm(usetIds, permId);
+			List<String> groupIds = groups.stream().map(GroupDto::getId).collect(Collectors.toList());
+
+			List<String> exceptUserIdEntrusts = usetUserExceptEntrustService.listEntrustUserCodesByUsetAndPerm(usetIds, permId);
+			List<GroupDto> exceptGroups = usetGroupExceptEntrustService.listEntrustGroupsByUsetAndPerm(usetIds, permId);
+			List<String> exceptGroupIds = exceptGroups.stream().map(GroupDto::getId).collect(Collectors.toList());
+
+			mergeEntrusts(dp, userIdEntrusts, groupIds, exceptUserIdEntrusts, exceptGroupIds);
+
+		} else if (dpv == DataPermViewEnum.ALL) {
+			List<SysButton> buttons = baseMapper.listUserPermScopeByPerm(orgId, currentUserId(), permId);
+			List<String> userIdEntrusts = userBusinessPermService.listUserEntrustIdsByPerm(orgId, currentUserId(), permId);
+			List<String> groupIdEntrusts = userBusinessPermService.listGroupEntrustIdsByPerm(orgId, currentUserId(), permId);
+
+			List<String> exceptUserIdEntrusts = userBusinessPermService.listUserExceptEntrustIdsByPerm(orgId, currentUserId(), permId);
+			List<String> exceptGroupIdEntrusts = userBusinessPermService.listGroupExceptEntrustIdsByPerm(orgId, currentUserId(), permId);
+
+
+			List<UsetDto> usets = userUsetService.listUsetsByGroupAndUser(orgId, currentUserId());
+			if (Checker.beEmpty(usets)) {
+				dp = mergePermScope(buttons);
+				mergeEntrusts(dp, userIdEntrusts, groupIdEntrusts, exceptUserIdEntrusts, exceptGroupIdEntrusts);
+				return dp;
+			}
+			Set<String> usetIds = usets.stream().map(UsetDto::getId).collect(Collectors.toSet());
+			List<SysButton> usetButtons = baseMapper.listUsetPermScopeByPerm(usetIds, permId);
+
+			buttons.addAll(usetButtons);
+			dp = mergePermScope(buttons);
+
+			List<String> usetUserIdEntrusts = usetUserEntrustService.listEntrustUserCodesByUsetAndPerm(usetIds, permId);
+			List<GroupDto> groups = usetGroupEntrustService.listEntrustGroupsByUsetAndPerm(usetIds, permId);
+			List<String> groupIds = groups.stream().map(GroupDto::getId).collect(Collectors.toList());
+
+			List<String> usetExceptUserIdEntrusts = usetUserExceptEntrustService.listEntrustUserCodesByUsetAndPerm(usetIds, permId);
+			List<GroupDto> exceptGroups = usetGroupExceptEntrustService.listEntrustGroupsByUsetAndPerm(usetIds, permId);
+			List<String> exceptGroupIds = exceptGroups.stream().map(GroupDto::getId).collect(Collectors.toList());
+
+			userIdEntrusts.addAll(usetUserIdEntrusts);
+			groupIdEntrusts.addAll(groupIds);
+			exceptUserIdEntrusts.addAll(usetExceptUserIdEntrusts);
+			exceptGroupIdEntrusts.addAll(exceptGroupIds);
+			mergeEntrusts(dp, userIdEntrusts, groupIdEntrusts, exceptUserIdEntrusts, exceptGroupIdEntrusts);
+
+		}
+		return dp;
+	}
 
 
 	private List<DataPermBusinessVo> mergeBusinessPerm(List<DataPermBusinessVo> perms) {
@@ -978,7 +1122,90 @@ public class SysRoleResourceServiceImpl extends MBaseServiceImpl<SysRoleResource
 		return list;
 	}
 
+	@Override
+	public List<DataPermBusinessVo> getBusinessDataPerm(String viewType, String orgId, String permId, String usetId) {
+		if (Checker.beEmpty(viewType) || Checker.beEmpty(orgId) || Checker.beEmpty(permId)) {
+			return null;
+		}
 
+		DataPermViewEnum dpv = EnumUtils.getEnum(DataPermViewEnum.class, viewType);
+		if (Checker.beNull(dpv)) {
+			return null;
+		}
+		List<DataPermBusinessVo> list = Lists.newArrayList();
+		if (dpv == DataPermViewEnum.USER) {
+			UserDataPermDto perm = userDataPermService.getUserDataPerm(currentUserId(), orgId, permId);
+			if (Checker.beNotNull(perm)) {
+				perm.setSearchExpresses(JSONArray.parseArray(perm.getPermExpress(), AdvanceSearchVo.class));
+				DataPermBusinessVo db = new DataPermBusinessVo();
+				db.setPermExpress(perm.getPermExpress());
+				db.setPermEndTime(perm.getPermEndTime());
+				db.setPermStartTime(perm.getPermStartTime());
+				db.setBeOrCondition(perm.getBeOrCondition());
+				db.setSearchExpresses(perm.getSearchExpresses());
+				list.add(db);
+			}
+
+		} else if (dpv == DataPermViewEnum.USET) {
+			Set<String> usetIds = Sets.newHashSet();
+			if (DataPermViewEnum.ALL.name().equals(usetId)) {
+				List<UsetDto> usets = userUsetService.listUsetsByGroupAndUser(orgId, currentUserId());
+				if (Checker.beNotEmpty(usets)) {
+					usetIds.addAll(usets.stream().map(UsetDto::getId).collect(Collectors.toSet()));
+				}
+			} else {
+				usetIds.add(usetId);
+			}
+			if (Checker.beNotEmpty(usetIds)) {
+				List<UsetDataPermDto> usetDataPerms = usetDataPermService.listUsetDataPerm(usetIds, permId);
+				for (UsetDataPermDto perm : usetDataPerms) {
+					perm.setSearchExpresses(JSONArray.parseArray(perm.getPermExpress(), AdvanceSearchVo.class));
+					DataPermBusinessVo db = new DataPermBusinessVo();
+					db.setPermExpress(perm.getPermExpress());
+					db.setPermEndTime(perm.getPermEndTime());
+					db.setPermStartTime(perm.getPermStartTime());
+					db.setBeOrCondition(perm.getBeOrCondition());
+					db.setSearchExpresses(perm.getSearchExpresses());
+					list.add(db);
+				}
+			}
+
+		} else if (dpv == DataPermViewEnum.ALL) {
+			UserDataPermDto perm = userDataPermService.getUserDataPerm(currentUserId(), orgId, permId);
+			if (Checker.beNotNull(perm)) {
+				perm.setSearchExpresses(JSONArray.parseArray(perm.getPermExpress(), AdvanceSearchVo.class));
+				DataPermBusinessVo db = new DataPermBusinessVo();
+				db.setPermExpress(perm.getPermExpress());
+				db.setPermEndTime(perm.getPermEndTime());
+				db.setPermStartTime(perm.getPermStartTime());
+				db.setBeOrCondition(perm.getBeOrCondition());
+				db.setSearchExpresses(perm.getSearchExpresses());
+				list.add(db);
+			}
+
+			Set<String> usetIds = Sets.newHashSet();
+			List<UsetDto> usets = userUsetService.listUsetsByGroupAndUser(orgId, currentUserId());
+			if (Checker.beNotEmpty(usets)) {
+				usetIds.addAll(usets.stream().map(UsetDto::getId).collect(Collectors.toSet()));
+			}
+
+			if (Checker.beNotEmpty(usetIds)) {
+				List<UsetDataPermDto> usetDataPerms = usetDataPermService.listUsetDataPerm(usetIds, permId);
+				for (UsetDataPermDto p : usetDataPerms) {
+					p.setSearchExpresses(JSONArray.parseArray(p.getPermExpress(), AdvanceSearchVo.class));
+					DataPermBusinessVo db = new DataPermBusinessVo();
+					db.setPermExpress(p.getPermExpress());
+					db.setPermEndTime(p.getPermEndTime());
+					db.setPermStartTime(p.getPermStartTime());
+					db.setBeOrCondition(p.getBeOrCondition());
+					db.setSearchExpresses(p.getSearchExpresses());
+					list.add(db);
+				}
+			}
+
+		}
+		return mergeBusinessPerm(list);
+	}
 
 	private List<DataPermColumnVo> mergeColumnPerm(List<DataPermColumnVo> perms) {
 		if (Checker.beEmpty(perms)) {
@@ -1004,5 +1231,88 @@ public class SysRoleResourceServiceImpl extends MBaseServiceImpl<SysRoleResource
 	}
 
 
+	@Override
+	public List<DataPermColumnVo> getColumnDataPerm(String viewType, String orgId, String permId, String usetId) {
+		if (Checker.beEmpty(viewType) || Checker.beEmpty(orgId) || Checker.beEmpty(permId)) {
+			return null;
+		}
 
+		DataPermViewEnum dpv = EnumUtils.getEnum(DataPermViewEnum.class, viewType);
+		if (Checker.beNull(dpv)) {
+			return null;
+		}
+		List<DataPermColumnVo> list = Lists.newArrayList();
+		if (dpv == DataPermViewEnum.USER) {
+			UserColumnPermDto perm = userColumnPermService.getUserColumnPerm(currentUserId(), orgId, permId);
+			if (Checker.beNull(perm)) {
+				return  null;
+			}
+			List<ActionSelectTable>  tables = JSONArray.parseArray(perm.getColumnExpress(), ActionSelectTable.class);
+			for (ActionSelectTable table : tables) {
+				list.add(new DataPermColumnVo()
+						.setTable(table.getTable())
+						.setTableComment(table.getTableComment())
+						.setAlias(table.getAlias())
+						.setColumns(table.getColumns()));
+			}
+		} else if (dpv == DataPermViewEnum.USET) {
+			Set<String> usetIds = Sets.newHashSet();
+			if (DataPermViewEnum.ALL.name().equals(usetId)) {
+				List<UsetDto> usets = userUsetService.listUsetsByGroupAndUser(orgId, currentUserId());
+				if (Checker.beNotEmpty(usets)) {
+					usetIds.addAll(usets.stream().map(UsetDto::getId).collect(Collectors.toSet()));
+				}
+			} else {
+				usetIds.add(usetId);
+			}
+			List<UsetColumnPermDto> perms = usetColumnPermService.listUsetColumnPerm(usetIds, permId);
+			for (UsetColumnPermDto perm : perms) {
+				if (Checker.beNotEmpty(perm.getColumnExpress())) {
+					List<ActionSelectTable> tables = JSONArray.parseArray(perm.getColumnExpress(), ActionSelectTable.class);
+					for (ActionSelectTable table : tables) {
+						list.add(new DataPermColumnVo()
+								.setTable(table.getTable())
+								.setTableComment(table.getTableComment())
+								.setAlias(table.getAlias())
+								.setColumns(table.getColumns()));
+					}
+				}
+			}
+		} else if (dpv == DataPermViewEnum.ALL) {
+			UserColumnPermDto perm = userColumnPermService.getUserColumnPerm(currentUserId(), orgId, permId);
+			if (Checker.beNull(perm)) {
+				return  null;
+			}
+			List<ActionSelectTable>  tables = JSONArray.parseArray(perm.getColumnExpress(), ActionSelectTable.class);
+			for (ActionSelectTable table : tables) {
+				list.add(new DataPermColumnVo()
+						.setTable(table.getTable())
+						.setTableComment(table.getTableComment())
+						.setAlias(table.getAlias())
+						.setColumns(table.getColumns()));
+			}
+
+			Set<String> usetIds = Sets.newHashSet();
+			List<UsetDto> usets = userUsetService.listUsetsByGroupAndUser(orgId, currentUserId());
+			if (Checker.beNotEmpty(usets)) {
+				usetIds.addAll(usets.stream().map(UsetDto::getId).collect(Collectors.toSet()));
+			}
+			List<UsetColumnPermDto> perms = usetColumnPermService.listUsetColumnPerm(usetIds, permId);
+			for (UsetColumnPermDto uperm : perms) {
+				if (Checker.beNotEmpty(uperm.getColumnExpress())) {
+					List<ActionSelectTable> utables = JSONArray.parseArray(uperm.getColumnExpress(), ActionSelectTable.class);
+					for (ActionSelectTable table : utables) {
+						list.add(new DataPermColumnVo()
+								.setTable(table.getTable())
+								.setTableComment(table.getTableComment())
+								.setAlias(table.getAlias())
+								.setColumns(table.getColumns()));
+					}
+				}
+			}
+
+		}
+
+		return mergeColumnPerm(list);
+	}
 }

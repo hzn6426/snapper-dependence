@@ -1,8 +1,17 @@
-/**
- * Copyright (c) 2018-2025, zening (316279828@qq.com).
+/*
+ * Copyright (c) 2020-2025, zening (316279828@qq.com).
  * <p>
- * Any unauthorised copying, selling, transferring, distributing, transmitting, renting,
- * or modifying of the Software is considered an infringement.
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy of
+ * the License at
+ * <p>
+ * https://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
  */
 package com.baomibing.orm.perm;
 
@@ -21,6 +30,7 @@ import com.alibaba.druid.util.JdbcUtils;
 import com.baomibing.core.common.AdvanceSearchParser;
 import com.baomibing.core.context.MapperAuthContext;
 import com.baomibing.core.context.PermContext;
+import com.baomibing.core.context.PermTenantContext;
 import com.baomibing.core.context.SqlInjectContext;
 import com.baomibing.core.exception.ExceptionEnum;
 import com.baomibing.core.exception.ServerRuntimeException;
@@ -82,23 +92,31 @@ public class DataPermWeaver implements Interceptor {
 
 	//判断是否忽略用户权限
 	private boolean judgeIgnoreUserScope(EntrustWarpper ew) {
-
+		if (ew instanceof TenantEntrustWarpper) {
+			return Boolean.TRUE.equals(ew.getBeIgnoreUserScope()) || Boolean.TRUE.equals(PermTenantContext.beIgnoreUserScope());
+		}
 		return Boolean.TRUE.equals(ew.getBeIgnoreUserScope()) || Boolean.TRUE.equals(PermContext.beIgnoreUserScope());
 	}
 
 	//判断是否忽略组织权限
 	private boolean judgeIgnoreGroupScope(EntrustWarpper ew) {
-
+		if (ew instanceof TenantEntrustWarpper) {
+			return Boolean.TRUE.equals(ew.getBeIgnoreGroupScope()) || Boolean.TRUE.equals(PermTenantContext.beIgnoreGroupScope());
+		}
 		return Boolean.TRUE.equals(ew.getBeIgnoreGroupScope()) || Boolean.TRUE.equals(PermContext.beIgnoreGroupScope());
 	}
 
 	private boolean judgeOnlyFilterCompany(EntrustWarpper ew) {
-
+		if (ew instanceof TenantEntrustWarpper) {
+			return Boolean.TRUE.equals(ew.getBeOnlyFilterCompany()) || Boolean.TRUE.equals(PermTenantContext.beOnlyFilterCompany());
+		}
 		return Boolean.TRUE.equals(ew.getBeOnlyFilterCompany()) || Boolean.TRUE.equals(PermContext.beOnlyFilterCompany());
 	}
 
 	private boolean judgeIgnoreCompanyScope(EntrustWarpper ew) {
-
+		if (ew instanceof TenantEntrustWarpper) {
+			return Boolean.TRUE.equals(ew.getBeIgnoreCompanyScope()) || Boolean.TRUE.equals(PermTenantContext.beIgnoreCompanyScope());
+		}
 		return Boolean.TRUE.equals(ew.getBeIgnoreCompanyScope()) || Boolean.TRUE.equals(PermContext.beIgnoreCompanyScope());
 	}
 
@@ -197,7 +215,89 @@ public class DataPermWeaver implements Interceptor {
 		return getFromTableNameFromSql(statement);
 	}
 
+	private Object doTenantInterceptor(Invocation invocation, MetaObject metaObject, MappedStatement mappedStatement, TenantEntrustWarpper ew) throws Throwable {
+		String mapperId = mappedStatement.getId();
+		String injectSql = SqlInjectContext.get(mapperId);
+		if (Checker.beNotEmpty(injectSql)) {
+			String supportInjectValue = SqlInjectContext.get(InjectConstant.TAG_FOR_SQL_INJECT_KEY);
+			if (Checker.beNotEmpty(supportInjectValue) && InjectConstant.TAG_FOR_SQL_INJECT_VALUE.equals(supportInjectValue)) {
+				//原始SQL
+				String originalSql = ((BoundSql) metaObject.getValue(BOUND_SQL)).getSql();
+				String additionalSql = contractSql(originalSql, injectSql, false, Checker.beNull(ew) ? "" : ew.getTableNameWithAuthAppend());
+				additionalSql = doHandleExceptColumns(additionalSql, ew.getExceptColumns(), ew.getTableNameWithColumnAppend());
+				contractTenantSQL(additionalSql, ObjectUtil.defaultIfNull(ew.getTableNameWithTenantAppend(), getMainTableName(metaObject)), ew);
+				metaObject.setValue(BOUND_SQL_SQL, additionalSql);
+			}
+		}
 
+		SqlCommandType type =  mappedStatement.getSqlCommandType();
+		if (!SqlCommandType.SELECT.equals(type) && !SqlCommandType.UPDATE.equals(type) && !SqlCommandType.DELETE.equals(type)) {
+			return invocation.proceed();
+		}
+		// //如果没有业务权限标识，直接跳过 不需要权限
+		if (Checker.beNull(ew)) {
+			return invocation.proceed();
+		}
+
+		//原始SQL
+		String originalSql = ((BoundSql) metaObject.getValue(BOUND_SQL)).getSql();
+		Statement statement = CCJSqlParserUtil.parse(originalSql);
+		List<DataPermWrap> dataPerms = ObjectUtil.defaultIfNull(ew.getDataPerms(), Lists.newArrayList());
+
+		if (Checker.beNotEmpty(ew.getScope()) && SCOPE_ALL.equals(ew.getScope()) && !ew.isBeLoginWithAuthCode()) {
+			String sql = doHandleDataPerms(dataPerms, Boolean.TRUE);
+			if (Checker.beNotEmpty(sql)) {
+				originalSql = contractSql(originalSql, sql, false,  ew.getTableNameWithAuthAppend());
+			}
+			originalSql = doHandleExceptColumns(originalSql, ew.getExceptColumns(), ew.getTableNameWithColumnAppend());
+			originalSql = contractTenantSQL(originalSql, ObjectUtil.defaultIfNull(ew.getTableNameWithTenantAppend(), getMainTableName(metaObject)), ew);
+			metaObject.setValue(BOUND_SQL_SQL, originalSql);
+			return invocation.proceed();
+		}
+		if (PermTenantContext.hasUserNos()) {
+			ew.getUserNos().addAll(PermTenantContext.listUserNos());
+			//注入用户时,如果不忽略用户权限,则不过滤分公司(可以跨公司指定用户)
+			if (!judgeIgnoreUserScope(ew)) {
+				ew.setScope(SCOPE_CUSTOMER_SPECIFIED);
+			}
+		}
+		//忽略创建用户列
+		if (PermTenantContext.beIgnoreCreateUserColumn()) {
+			if (Checker.beNotEmpty(ew.getUserColumn())) {
+				ew.setUserColumn(Arrays.stream(ew.getUserColumn()).filter(uc -> !uc.equals(PermConstant.CREATE_USER)).toArray(String[]::new));
+			}
+		}
+		String mainTableName = Checker.beNotEmpty(ew.getTableNameWithAuthAppend()) ? ew.getTableNameWithAuthAppend() : getFromTableNameFromSql(statement);
+		//如果有组织委托，根据表明构建组织ID对应的列名
+		if (Checker.beNotEmpty(ew.getGroupWraps())) {
+			originalSql = bindJoin(mainTableName, statement);
+		}
+
+		String additionalSql = getBusinessAuthSql(mainTableName, ew);
+		if (Checker.beEmpty(additionalSql)) {
+			originalSql = contractTenantSQL(originalSql, ObjectUtil.defaultIfNull(ew.getTableNameWithTenantAppend(), getMainTableName(metaObject)), ew);
+			metaObject.setValue(BOUND_SQL_SQL, originalSql);
+			return invocation.proceed();
+		}
+
+		originalSql = contractSql(originalSql, additionalSql,false, ew.getTableNameWithAuthAppend());
+		originalSql = doHandleExceptColumns(originalSql, ew.getExceptColumns(), ew.getTableNameWithColumnAppend());
+		originalSql = contractTenantSQL(originalSql, ObjectUtil.defaultIfNull(ew.getTableNameWithTenantAppend(), getMainTableName(metaObject)), ew);
+		metaObject.setValue(BOUND_SQL_SQL, originalSql);
+
+		Object result = invocation.proceed();
+		if (SqlCommandType.SELECT.equals(type)) {
+			return result;
+		}
+		boolean notValid = result != null && Strings.ZERO.equals(result.toString());
+		if (SqlCommandType.UPDATE.equals(type) && notValid) {
+			throw new ServerRuntimeException(ExceptionEnum.NO_DATA_PERMISSION_FOR_UPDATE);
+		}
+		if (SqlCommandType.DELETE.equals(type) && notValid) {
+			throw new ServerRuntimeException(ExceptionEnum.NO_DATA_PERMISSION_FOR_DELETE);
+		}
+		return result;
+	}
 
 	@Override
 	public Object intercept(Invocation invocation) throws Throwable {
@@ -209,11 +309,19 @@ public class DataPermWeaver implements Interceptor {
 		String injectSql = SqlInjectContext.get(mapperId);
 
 		EntrustWarpper ew = MapperAuthContext.get(mapperId);
-		return doInterceptor(invocation, metaObject, mappedStatement, ew);
+		if (ew instanceof TenantEntrustWarpper) {
+			return doTenantInterceptor(invocation, metaObject, mappedStatement, (TenantEntrustWarpper)ew);
+		} else {
+			return doInterceptor(invocation, metaObject, mappedStatement, ew);
+		}
+
+
 	}
 
 	private final String USER_TABLE = "sys_user";
+	private final String TENANT_USER_TABLE = "sys_tenant_user";
 	private final String USER_GROUP_TABLE_ALIAS = "data_auth_alias_user_group";
+	private final String TENANT_USER_GROUP_TABLE_ALIAS = "data_auth_alias_tenant_user_group";
 
 	//构建join条件连接用户组织关系
 	private String bindJoin(String mainTableName, Statement statement) {
@@ -227,6 +335,19 @@ public class DataPermWeaver implements Interceptor {
 			ugJoin.setRightItem(ugTable);
 			BinaryExpression ugOnExpression = new EqualsTo();
 			String USER_GROUP_TABLE_USER_ID_COLUMN = USER_GROUP_TABLE_ALIAS + ".user_id";
+			ugOnExpression.setLeftExpression(new Column(USER_GROUP_TABLE_USER_ID_COLUMN));
+			ugOnExpression.setRightExpression(new Column(mainTableName + ".id"));
+			ugJoin.setOnExpression(ugOnExpression);
+			joins.add(ugJoin);
+		} else if (TENANT_USER_TABLE.equalsIgnoreCase(mainTableName)) {
+			Join ugJoin = new Join();
+			String USER_GROUP_TABLE = "sys_tenant_user_group";
+			Table ugTable = new Table(USER_GROUP_TABLE);
+			ugTable.setAlias(new Alias(TENANT_USER_GROUP_TABLE_ALIAS, false));
+			ugJoin.setLeft(true);
+			ugJoin.setRightItem(ugTable);
+			BinaryExpression ugOnExpression = new EqualsTo();
+			String USER_GROUP_TABLE_USER_ID_COLUMN = TENANT_USER_GROUP_TABLE_ALIAS + ".user_id";
 			ugOnExpression.setLeftExpression(new Column(USER_GROUP_TABLE_USER_ID_COLUMN));
 			ugOnExpression.setRightExpression(new Column(mainTableName + ".id"));
 			ugJoin.setOnExpression(ugOnExpression);
@@ -306,6 +427,40 @@ public class DataPermWeaver implements Interceptor {
 		return tableName;
 	}
 
+
+	private String buildTenantSQL(String tableName, TenantEntrustWarpper ew) {
+		final String[] tenantColumns = ew.getTenantColumn();
+		String tenantId = ew.getTenantId();
+		StringBuilder sqlBuilder = new StringBuilder();
+		String sql1 = "{0}";
+		Set<String> columns = Sets.newHashSet();
+		Iterator<String> it = Arrays.asList(tenantColumns).iterator();
+		while (it.hasNext()) {
+			String tenantIdColumn = it.next();
+			String tableTenantColumn;
+			if (tenantIdColumn.contains(Strings.DOT)) {
+				tableTenantColumn = tenantIdColumn;
+			} else {
+				tableTenantColumn = tableName + "." + tenantIdColumn;
+			}
+			columns.add(MessageFormat.format(sql1, tableTenantColumn));
+		}
+
+		sqlBuilder.append(" ( ");
+		Iterator<String> columnsIt = columns.iterator();
+		while (columnsIt.hasNext()) {
+			String c = columnsIt.next();
+			sqlBuilder.append(c).append(" = ").append("'").append(tenantId).append("'");
+			if (columnsIt.hasNext()) {
+				sqlBuilder.append(" OR ");
+			}
+		}
+		sqlBuilder.append(" ) ");
+
+		return sqlBuilder.toString();
+
+	}
+
 	private String buildUserColumnSQL(final String tableName, final String[] userColumns, Set<String> userNos, Boolean beNotIn, Boolean beUserColumnInComma) {
 		StringBuilder sqlBuilder = new StringBuilder();
 		String sql1 = "{0} ";
@@ -357,6 +512,7 @@ public class DataPermWeaver implements Interceptor {
 	private String buildGroupColumnSQL(final String tableName, final String[] groupColumns, List<GroupIntervalWrap> groupWraps, boolean beNotLike) {
 		Iterator<GroupIntervalWrap> groupIt = groupWraps.iterator();
 		boolean beUserTable = USER_TABLE.equalsIgnoreCase(tableName);
+		boolean beTenantUserTable = TENANT_USER_TABLE.equalsIgnoreCase(tableName);
 		String sql1 = "{0}";
 		String sql2 = "SUBSTR({0}, 1, IF(LOCATE('''#''', {0}), LOCATE('''#''', {0}) - 1 , LENGTH({0})))";
 		Set<String> columns = Sets.newHashSet();
@@ -371,7 +527,7 @@ public class DataPermWeaver implements Interceptor {
 				tableGroupColumn = groupColumn;
 				beGroupIdColumn = tableGroupColumn.contains(PermConstant.GROUP_ID);
 			} else {
-				tableGroupColumn = (beUserTable ? USER_GROUP_TABLE_ALIAS : (tableName)) + "." + groupColumn;
+				tableGroupColumn = (beUserTable ? USER_GROUP_TABLE_ALIAS : (beTenantUserTable ? TENANT_USER_GROUP_TABLE_ALIAS : tableName)) + "." + groupColumn;
 				beGroupIdColumn = PermConstant.GROUP_ID.equalsIgnoreCase(groupColumn);
 			}
 			columns.add(MessageFormat.format(beGroupIdColumn ? sql1 : sql2, tableGroupColumn));
@@ -843,6 +999,11 @@ public class DataPermWeaver implements Interceptor {
 		}
 		return originalSql;
 
+	}
+
+	private String contractTenantSQL(String originalSql, String tableNameInject, TenantEntrustWarpper ew) {
+		String additionalSql = buildTenantSQL(tableNameInject, ew);
+		return contractSql(originalSql, additionalSql, false, tableNameInject);
 	}
 
 	//追加SQL

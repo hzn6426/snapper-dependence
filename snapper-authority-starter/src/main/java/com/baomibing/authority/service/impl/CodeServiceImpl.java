@@ -1,9 +1,20 @@
-/**
- * Copyright (c) 2018-2025, zening (316279828@qq.com).
+
+/*
+ * Copyright (c) 2020-2025, zening (316279828@qq.com).
  * <p>
- * Any unauthorised copying, selling, transferring, distributing, transmitting, renting,
- * or modifying of the Software is considered an infringement.
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy of
+ * the License at
+ * <p>
+ * https://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
  */
+
 package com.baomibing.authority.service.impl;
 
 import com.baomibing.authority.service.CodeService;
@@ -96,11 +107,14 @@ public class CodeServiceImpl implements CodeService {
             if (Checker.beEmpty(redisMaxId)){
                 maxId = maxIdFunction.get();
             } else {
-                maxId = StringUtils.leftPad(Strings.EMPTY, 3, "0");
+                maxId = StringUtils.rightPad(redisMaxId, 4, "0");
             }
-            char c1 = maxId.charAt(0);
-            char c2 = maxId.charAt(1);
-            char c3 = maxId.charAt(2);
+            if (Checker.beEmpty(maxId)) {
+                maxId = StringUtils.rightPad(Strings.T, 4, "0");
+            }
+            char c1 = maxId.charAt(1);
+            char c2 = maxId.charAt(2);
+            char c3 = maxId.charAt(3);
             char nc3 = CharacterUtil.nextChar(c3);
             if (nc3 == '_') {
                 c3 = '0';
@@ -119,8 +133,8 @@ public class CodeServiceImpl implements CodeService {
             } else {
                 c3 = nc3;
             }
-            maxId = Character.toString(c1) + Character.toString(c2) + Character.toString(c3);
+            maxId = Strings.T + Character.toString(c1) + Character.toString(c2) + Character.toString(c3);
         }while (!cacheService.setNxPx(redisKey, String.valueOf(maxId), 500));
-        return StringUtils.leftPad(maxId, paddingDigit, "0");
+        return StringUtils.rightPad(maxId, paddingDigit, "0");
     }
 }

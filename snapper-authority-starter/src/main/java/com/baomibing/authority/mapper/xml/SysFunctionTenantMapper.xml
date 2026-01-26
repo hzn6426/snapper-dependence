@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright (c) 2020-2025, zening (316279828@qq.com).
+  ~ <p>
+  ~ Licensed under the Apache License, Version 2.0 (the "License"); you may not
+  ~ use this file except in compliance with the License. You may obtain a copy of
+  ~ the License at
+  ~ <p>
+  ~ https://www.apache.org/licenses/LICENSE-2.0
+  ~ <p>
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+  ~ WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+  ~ License for the specific language governing permissions and limitations under
+  ~ the License.
+  -->
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.baomibing.authority.mapper.SysFunctionTenantMapper">
+
+	<!-- 列出所有上线的功能列表 -->
+	<select id="listAllOnlineFunction" resultType="com.baomibing.authority.entity.SysFunctionTenant">
+		SELECT ft.function_name, ft.request_url, ft.request_method, ft.fee_type, ft.unit_price, ft.function_id, tf.tenant_id,tf.expire_time
+		FROM sys_function_tenant ft LEFT JOIN sys_tenant_function tf ON ft.function_id = tf.function_id
+		WHERE ft.state = 'ONLINE'
+	</select>
+
+	<!-- 列出所有租户开通的上线的月付的功能列表 -->
+	<select id="listAllOnlineMonthFunction" resultType="com.baomibing.authority.entity.SysFunctionTenant">
+		SELECT ft.function_name, ft.request_url, ft.request_method, ft.fee_type, ft.unit_price, ft.function_id, tf.tenant_id
+		FROM sys_function_tenant ft INNER JOIN sys_tenant_function tf ON ft.function_id = tf.function_id
+		WHERE ft.state = 'ONLINE' AND ft.fee_type = 'MONTH'
+	</select>
+
+
+</mapper>

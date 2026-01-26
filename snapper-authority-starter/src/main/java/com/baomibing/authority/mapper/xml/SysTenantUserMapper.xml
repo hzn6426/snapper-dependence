@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright (c) 2020-2025, zening (316279828@qq.com).
+  ~ <p>
+  ~ Licensed under the Apache License, Version 2.0 (the "License"); you may not
+  ~ use this file except in compliance with the License. You may obtain a copy of
+  ~ the License at
+  ~ <p>
+  ~ https://www.apache.org/licenses/LICENSE-2.0
+  ~ <p>
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+  ~ WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+  ~ License for the specific language governing permissions and limitations under
+  ~ the License.
+  -->
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.baomibing.authority.mapper.SysTenantUserMapper">
+
+    <!-- 根据用户工号、姓名、电话、邮箱获取用户信息 -->
+    <select id="searchByCondition" resultType="com.baomibing.authority.entity.SysTenantUser">
+        SELECT DISTINCT u.id, u.user_no, u.user_real_cn_name, u.user_real_en_name, u.user_sex, u.user_email,u.be_super,
+        u.user_tag,u.point_tag,u.create_time,u.user_mobile,u.create_user_cn_name,
+        CONCAT(GROUP_CONCAT(DISTINCT r.role_name)) AS userRoles, CONCAT(GROUP_CONCAT(DISTINCT r.id)) AS userRoleIds,
+        u.expire_time, u.create_time, u.state, u.avatar, u.note, g.group_name
+        FROM sys_tenant_user AS u
+        LEFT JOIN sys_tenant_user_role AS ur ON u.id = ur.user_id
+        LEFT JOIN sys_tenant_role AS r ON ur.role_id = r.id
+        left join sys_tenant_user_group ug on ug.user_id = u.id
+        left join sys_tenant_group g on g.id = ug.group_id
+        <where>
+            u.tenant_id = #{tenantId,jdbcType=CHAR}
+            <if test="userNo != null and  userNo != ''">
+                AND u.user_no LIKE CONCAT('%',#{userNo,jdbcType=CHAR},'%')
+            </if>
+            <if test="userRealCnName != null and  userRealCnName != ''">
+                AND u.user_real_cn_name LIKE CONCAT('%',#{userRealCnName,jdbcType=CHAR},'%')
+            </if>
+            <if test="userEmail != null and  userEmail != ''">
+                AND u.user_email LIKE CONCAT('%',#{userEmail,jdbcType=CHAR},'%')
+            </if>
+            <if test="state != null and  state != ''">
+                AND u.state = #{state,jdbcType=CHAR}
+            </if>
+            <if test="roleId != null and  roleId != ''">
+                AND ur.role_id = #{roleId,jdbcType=CHAR}
+            </if>
+            <if test="userTags != null and  userTags.size > 0">
+                <foreach collection="userTags" index="index" item="item" open="" separator="" close="">
+                    AND FIND_IN_SET(#{item}, u.user_tag)
+                </foreach>
+            </if>
+            <if test="groupId != null and  groupId != ''">
+                AND ug.group_id like CONCAT(#{groupId,jdbcType=CHAR},'%')
+            </if>
+        </where>
+        GROUP BY u.id, u.user_no, u.user_real_cn_name, u.user_real_en_name, u.user_sex, u.user_email,
+        u.user_mobile, u.be_super, u.expire_time, u.state, u.avatar, u.note, u.create_user_cn_name, g.group_name
+        ORDER BY u.user_no desc
+        LIMIT #{offset,jdbcType=INTEGER}, #{limit,jdbcType=INTEGER}
+    </select>
+
+    <!-- 根据用户工号、姓名、电话、邮箱获取用户信息数量 -->
+    <select id="countByCondition" resultType="java.lang.Integer">
+        SELECT
+        COUNT(DISTINCT(u.user_no))
+        FROM sys_tenant_user AS u
+        LEFT JOIN sys_tenant_user_role AS ur ON u.id = ur.user_id
+        LEFT JOIN sys_tenant_role AS r ON ur.role_id = r.id
+        left join sys_tenant_user_group ug on ug.user_id = u.id
+        <where>
+            u.tenant_id = #{tenantId,jdbcType=CHAR}
+            <if test="userNo != null and  userNo != ''">
+                AND u.user_no LIKE CONCAT('%',#{userNo,jdbcType=CHAR},'%')
+            </if>
+            <if test="userRealCnName != null and  userRealCnName != ''">
+                AND u.user_real_cn_name LIKE CONCAT('%',#{userRealCnName,jdbcType=CHAR},'%')
+            </if>
+            <if test="userEmail != null and  userEmail != ''">
+                AND u.user_email LIKE CONCAT('%',#{userEmail,jdbcType=CHAR},'%')
+            </if>
+            <if test="state != null and  state != ''">
+                AND u.state = #{state,jdbcType=CHAR}
+            </if>
+            <if test="roleId != null and  roleId != ''">
+                AND ur.role_id = #{roleId,jdbcType=CHAR}
+            </if>
+            <if test="userTags != null and  userTags.size > 0">
+                <foreach collection="userTags" index="index" item="item" open="" separator="" close="">
+                    AND FIND_IN_SET(#{item}, u.user_tag)
+                </foreach>
+            </if>
+            <if test="groupId != null and  groupId != ''">
+                AND ug.group_id like CONCAT(#{groupId,jdbcType=CHAR},'%')
+            </if>
+        </where>
+    </select>
+
+    <!-- 根据组织获取用户信息 -->
+    <select id="searchByGroupCondition" resultType="com.baomibing.authority.entity.SysTenantUser">
+        SELECT DISTINCT ug.id as ug_id, u.id , u.user_no, u.user_real_cn_name, u.user_real_en_name, u.user_sex,
+        u.user_email, u.user_tag, p.id as position_id,
+        CONCAT(GROUP_CONCAT(DISTINCT r.role_name)) AS userRoles, CONCAT(GROUP_CONCAT(DISTINCT r.id)) AS userRoleIds,
+        p.post_name,
+        u.expire_time, u.create_time, u.state, u.avatar, u.note
+        FROM sys_tenant_user_group ug
+        LEFT JOIN sys_tenant_user u ON u.id = ug.user_id
+        LEFT JOIN sys_tenant_user_position up ON u.id = up.user_id AND up.group_id = ug.group_id
+        LEFT JOIN sys_tenant_position p ON up.position_id = p.id
+        LEFT JOIN sys_tenant_user_role AS ur ON u.id = ur.user_id AND ur.org_id = #{groupId,jdbcType=CHAR}
+        LEFT JOIN sys_tenant_role AS r ON ur.role_id = r.id
+        <where>
+            ug.group_id = #{groupId,jdbcType=CHAR} and u.tenant_id = #{tenantId,jdbcType=CHAR}
+        </where>
+        GROUP BY ug.id, u.id , u.user_no, u.user_real_cn_name, u.user_real_en_name, u.user_sex, u.user_email,
+        u.user_mobile,u.user_tag, p.id, p.post_name,
+        u.expire_time, u.create_time, u.state, u.avatar, u.note
+        ORDER BY u.user_no desc
+        LIMIT #{offset,jdbcType=INTEGER}, #{limit,jdbcType=INTEGER}
+    </select>
+
+    <!-- 根据组织获取用户信息的数量 -->
+    <select id="countByGroupCondition" resultType="java.lang.Integer">
+        SELECT
+        COUNT(u.user_no)
+        FROM sys_tenant_user_group ug
+        LEFT JOIN sys_tenant_user u ON u.id = ug.user_id
+        LEFT JOIN sys_tenant_user_position up ON u.id = up.user_id AND up.group_id = ug.group_id
+        LEFT JOIN sys_tenant_position p ON up.position_id = p.id
+        <where>
+            ug.group_id = #{groupId,jdbcType=CHAR} and u.tenant_id = #{tenantId,jdbcType=CHAR}
+        </where>
+    </select>
+
+    <!-- 获取未分配组织的用户列表 -->
+    <select id="listForNotAssignGroup" resultType="com.baomibing.authority.entity.SysTenantUser">
+        SELECT DISTINCT u.id, u.user_no, u.user_real_cn_name, u.user_real_en_name, u.user_sex, u.user_email, u.user_tag,
+        u.expire_time, u.create_time, u.state, u.avatar, u.note
+        FROM sys_tenant_user u
+        WHERE u.tenant_id = #{tenantId,jdbcType=CHAR} AND NOT EXISTS
+        	(SELECT user_id FROM sys_tenant_user_group ug WHERE ug.user_id = u.id)
+    </select>
+
+    <!-- 获取未分配组织的用户数据条数 -->
+    <select id="countForNotAssignGroup" resultType="java.lang.Integer">
+        SELECT COUNT(1)
+        FROM sys_tenant_user u
+        WHERE u.tenant_id = #{tenantId,jdbcType=CHAR} AND NOT  EXISTS
+        	(SELECT user_id FROM sys_tenant_user_group ug WHERE ug.user_id = u.id)
+    </select>
+
+    <!-- 获取所有建立组织关系的成员列表 -->
+    <select id="listAllGroupUsers" resultType="com.baomibing.authority.entity.SysTenantUser">
+        SELECT u.id, u.user_no, u.user_real_cn_name, u.user_real_en_name, ug.group_id, u.state
+        FROM sys_tenant_user u
+        INNER JOIN sys_tenant_user_group ug ON ug.user_id = u.id
+        WHERE u.tenant_id = #{tenantId,jdbcType=CHAR}
+    </select>
+
+    <select id="listByKeyWordAndType" resultType="com.baomibing.authority.entity.SysTenantUser">
+        SELECT u.id,u.user_no,u.user_real_cn_name,u.user_real_en_name,g.group_id, g.group_name
+        FROM sys_tenant_user u
+        INNER JOIN sys_tenant_user_group ug ON ug.user_id = u.id
+        INNER JOIN sys_tenant_group g ON g.id = ug.group_id
+        WHERE u.state IN ('ACTIVE','STOPPED') AND u.be_search = 1 and u.tenant_id = #{tenantId,jdbcType=CHAR}
+        <if test="userTag != null and  userTag != ''">
+            AND FIND_IN_SET(#{userTag},u.user_tag)
+        </if>
+        <if test="KeyWord != null and  KeyWord != ''">
+            AND (u.user_real_cn_name LIKE CONCAT('%',#{KeyWord},'%')
+            OR u.user_real_en_name LIKE CONCAT('%',#{KeyWord},'%')
+            OR u.pin_yin LIKE CONCAT('%',#{KeyWord},'%')
+            OR u.full_pin_yin LIKE CONCAT('%',#{KeyWord},'%')
+            OR u.user_no LIKE CONCAT('%',#{KeyWord},'%'))
+        </if>
+        LIMIT 10
+    </select>
+
+    <!-- 获取所有建立组织关系的成员列表 -->
+    <select id="listAllGroupUsersByTag" resultType="com.baomibing.authority.entity.SysTenantUser">
+        SELECT u.id,u.user_no,u.user_real_cn_name,u.user_real_en_name, ug.group_id
+        FROM sys_tenant_user u
+        INNER JOIN sys_tenant_user_group ug ON ug.user_id = u.id
+        WHERE state = 'ACTIVE' and u.tenant_id = #{tenantId,jdbcType=CHAR}
+        <if test="userTag != null and  userTag != ''">
+            AND FIND_IN_SET(#{userTag},user_tag)
+        </if>
+    </select>
+
+</mapper>

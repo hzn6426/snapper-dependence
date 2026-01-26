@@ -1,4 +1,20 @@
 
+/*
+ * Copyright (c) 2020-2025, zening (316279828@qq.com).
+ * <p>
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy of
+ * the License at
+ * <p>
+ * https://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
+ */
+
 package com.baomibing.authority.exception;
 
 
@@ -6,13 +22,6 @@ import com.baomibing.tool.exception.ExceptionEnumable;
 
 public enum AuthorizationExceptionEnum implements ExceptionEnumable {
 
-    NO_PRIVILEGE_EXCEPTION(403, "用户没有访问资源的权限!"),
-    USER_BE_UNAUTHERIZED(401, "用户权限资源认证失败，没有权限!"),
-    THE_VERSION_CAN_NOT_HAVE_THIS_FUNCTION(1997,"该版本无法使用该功能，请联系管理员升级版本！"),
-    THE_VERSION_CAN_NOT_SUPPORT_MULTI_LOGIN(1990,"该版本无法使用同时登录功能，请联系管理员升级版本！"),
-    THE_VERSION_CAN_NOT_CREATE_EXCEED_USER(1991,"该版本无法创建超过{0}个用户，请联系管理员升级版本！"),
-    THE_VERSION_CAN_NOT_CREATE_EXCEED_POSITION(1992,"该版本无法创建超过{0}个职位，请联系管理员升级版本！"),
-    THE_VERSION_CAN_NOT_CREATE_EXCEED_COMPANY(1993,"该版本无法创建超过{0}个分公司，请联系管理员升级版本！"),
     DECODE_RSA_EXCEPTION(2001, "解码RSA KEY失败，请重新登录!"),
     INVALID_TOKEN_EXCEPTION(20002, "鉴权失败，请重新登录!"),
     TOKEN_TIME_OUT_EXCEPTION(20003, "登录时间过长，请重新登录!"),
@@ -22,7 +31,7 @@ public enum AuthorizationExceptionEnum implements ExceptionEnumable {
 
     USER_NAME_HAS_INVALID_CHARS_WILL_BE_LOCKED(10117, "用户账号中含有非法字符,不符合规范, 非法输入IP将被锁定!"),
     USER_NAME_LOCKED(10118, "用户账号已锁定, 请联系管理员!"),
-    USER_IP_LOCKED(10119, "用户IP已锁定, 请联系管理员!"),
+    USER_IP_LOCKED(10119, "用户IP{0}已锁定, 请联系管理员!"),
     MENU_OF_BUTTON_REFERENCE_NOT_EXIST(10120, "按钮引用的菜单不存在！"),
     INVALID_NODE_ID_EXCEPTION(10121, "非法的节点ID！{0}"),
     INVALID_ROLE_ID_EXCEPTION(10122, "非法的角色ID！{0}"),
@@ -75,6 +84,17 @@ public enum AuthorizationExceptionEnum implements ExceptionEnumable {
     CREATE_RSA_KEY_EXCEPTION(10070, "创建RSA秘钥错误!"),
     NO_PUBLIC_SECRET_KEY_EXCEPTION(10071, "公钥匹配错误！"),
     USER_NOT_IN_THE_GROUP(10072, "用户未加入该组织，无法进行操作！"),
+    INVALID_CHARGE_MONEY(10073, "充值金额必须大于0！"),
+    FUNCTION_HAVE_BEEN_OFFLINE(10074, "该功能已下线，无法进行操作！"),
+    TENANT_NOT_OPEN_FUNCTION_PRIVILEGE(10075, "该租户未开通功能:{0}权限，请联系管理员进行开通！"),
+    INVALID_FUNCTION_FEE_TYPE(10076, "非法的功能费用类型:{0}，请联系管理员进行处理！"),
+    TENANT_FUNCTION_EXPIRED(10077, "您购买的功能:{0}已过期，请联系管理员进行续费操作！"),
+    TENANT_FUNCTION_HAVE_EXIST(10078, "该功能已存在，无法进行后续操作！"),
+    TENANT_ACCOUNT_NOT_HAVE_ENOUGH_MONEY(10079, "租户账户余额不足，无法进行后续操作！"),
+    FUNCTION_FEE_TYPE_NOT_MONTH_CAN_NOT_DEFER(10080, "该功能为非月付，不能进行延期操作!！"),
+    SAMPLE_ENVIRONMENT_NOT_SUPPORT_THE_OPERATION(10081, "演示环境不支持该操作！"),
+    TENANT_NOT_INIT_SUPER(10082, "该租户未初始化超级管理员，请先进行初始化！"),
+    TWO_USERS_NOT_IN_THE_SAME_GROUP_CAN_NOT_COPY_AUTH(10083, "两个用户不在同一个组织，不能复制权限")
     ;
 
 

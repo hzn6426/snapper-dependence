@@ -1,8 +1,17 @@
-/**
- * Copyright (c) 2018-2025, zening (316279828@qq.com).
+/*
+ * Copyright (c) 2020-2025, zening (316279828@qq.com).
  * <p>
- * Any unauthorised copying, selling, transferring, distributing, transmitting, renting,
- * or modifying of the Software is considered an infringement.
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy of
+ * the License at
+ * <p>
+ * https://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
  */
 package com.baomibing.security.exception;
 
@@ -49,21 +58,21 @@ import java.util.stream.Collectors;
 @RestControllerAdvice
 public class AuthorityWebExceptionHandler {
 
-    @ExceptionHandler(ServerRuntimeException.class)
+	@ExceptionHandler(ServerRuntimeException.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public R<?> bizException(ServerRuntimeException ex, HttpServletRequest request) {
         log.error("ServerRunTimeException:", ex);
         return R.build(ex.getCode(), ex.getMessage()).withRequest(request);
     }
-
-    @ExceptionHandler(NotRedirectFromGateWayException.class)//不经过gateway直接请求
+	
+	@ExceptionHandler(NotRedirectFromGateWayException.class)//不经过gateway直接请求
     @ResponseStatus(HttpStatus.FORBIDDEN)
     public R<?> notFoundException(NotRedirectFromGateWayException ex, HttpServletRequest request) {
         log.error("NotRedirectFromGateWayException:", ex);
         return R.build(new ServerRuntimeException(ExceptionEnum.NO_PRIVILEGE_EXCEPTION)).withRequest(request);
     }
-
-    @ExceptionHandler(NoHandlerFoundException.class)
+	
+	@ExceptionHandler(NoHandlerFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public R<?> notFoundException(NoHandlerFoundException ex, HttpServletRequest request) {
         log.error("NoHandlerFoundException:", ex);
@@ -76,7 +85,7 @@ public class AuthorityWebExceptionHandler {
         log.error("HttpMessageNotReadableException:", ex);
         return R.build(new ServerRuntimeException(ExceptionEnum.MESSAGE_NOT_READABLE_ERROR)).withRequest(request);
     }
-
+    
 //    //所有的feignException都会被封装成HystrixRuntimeException
 //    @ExceptionHandler(HystrixRuntimeException.class)
 //    @ResponseStatus(HttpStatus.BAD_REQUEST)
@@ -95,7 +104,7 @@ public class AuthorityWebExceptionHandler {
         log.error("BindException:", ex);
         try {
             String vmessage = ex.getBindingResult().getFieldError().getDefaultMessage();
-            if (Checker.beNotEmpty(vmessage)) {
+			if (Checker.beNotEmpty(vmessage)) {
                 return R.build(new ServerRuntimeException(ExceptionEnum.BIND_ARGUMENT_VALIDATE_ERROR, vmessage)).withRequest(request);
             }
         } catch (Exception ee) {
@@ -176,7 +185,7 @@ public class AuthorityWebExceptionHandler {
         log.error("ServletException:", ex);
         String msg = "UT010016: Not a multi part request";
         if (msg.equalsIgnoreCase(ex.getMessage())) {
-            return R.build(new ServerRuntimeException(ExceptionEnum.REQUEST_FILE_PARAM_EXCEPTION)).withRequest(request);
+        	return R.build(new ServerRuntimeException(ExceptionEnum.REQUEST_FILE_PARAM_EXCEPTION)).withRequest(request);
         }
         return R.build(new ServerRuntimeException(ExceptionEnum.SYSTEM_IS_BUSY)).withRequest(request);
     }
@@ -184,7 +193,7 @@ public class AuthorityWebExceptionHandler {
     @ExceptionHandler(MultipartException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public R<?> multipartException(MultipartException ex, HttpServletRequest request) {
-        ex.printStackTrace();
+		ex.printStackTrace();
         log.error("MultipartException:", ex);
         return R.build(new ServerRuntimeException(ExceptionEnum.REQUEST_FILE_PARAM_EXCEPTION)).withRequest(request);
     }
@@ -270,19 +279,19 @@ public class AuthorityWebExceptionHandler {
         log.error("DataIntegrityViolationException:", ex);
         return R.build(new ServerRuntimeException(ExceptionEnum.SQL_EXECUTE_EXCEPTION)).withRequest(request);
     }
-
+    
     @ExceptionHandler(UsernameNotFoundException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public R<?> userNameNotFoundException(UsernameNotFoundException ex, HttpServletRequest request) {
-        log.error("UsernameNotFoundException:", ex);
-        return R.build(new ServerRuntimeException(ExceptionEnum.USER_NAME_NOT_EXIST)).withRequest(request);
+    	 log.error("UsernameNotFoundException:", ex);
+    	 return R.build(new ServerRuntimeException(ExceptionEnum.USER_NAME_NOT_EXIST)).withRequest(request);
     }
-
+    
     @ExceptionHandler(BadCredentialsException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public R<?> badCredentialsException(BadCredentialsException ex, HttpServletRequest request) {
-        log.error("BadCredentialsException:", ex);
-        return R.build(new ServerRuntimeException(ExceptionEnum.USER_NAME_OR_PASSWD_NOT_CORRECT)).withRequest(request);
+    	 log.error("BadCredentialsException:", ex);
+    	 return R.build(new ServerRuntimeException(ExceptionEnum.USER_NAME_OR_PASSWD_NOT_CORRECT)).withRequest(request);
     }
 
     @ExceptionHandler(TokenBeKickedException.class)
@@ -326,10 +335,10 @@ public class AuthorityWebExceptionHandler {
             return R.build(new ServerRuntimeException(ExceptionEnum.USER_ACCOUNT_LOCKED)).withRequest(request);
         } else if (ex.getCause() instanceof AuthPassExpiredException) {
             return R.build(new ServerRuntimeException(ExceptionEnum.USER_AUTH_CODE_EXPIRE)).withRequest(request);
-        }  else if (ex.getCause() instanceof NotSupportPointException) {
+        } else if (ex.getCause() instanceof NotSupportPointException) {
             return R.build(new ServerRuntimeException(ExceptionEnum.USER_POINT_NOT_SUPPORT)).withRequest(request);
         }
         return R.build(new ServerRuntimeException(ExceptionEnum.USER_NAME_OR_PASSWD_NOT_CORRECT)).withRequest(request);
     }
-
+    
 }

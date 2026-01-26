@@ -1,8 +1,17 @@
-/**
- * Copyright (c) 2018-2025, zening (316279828@qq.com).
+/*
+ * Copyright (c) 2020-2025, zening (316279828@qq.com).
  * <p>
- * Any unauthorised copying, selling, transferring, distributing, transmitting, renting,
- * or modifying of the Software is considered an infringement.
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy of
+ * the License at
+ * <p>
+ * https://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
  */
 package com.baomibing.authority.constant;
 
@@ -12,9 +21,6 @@ public abstract class SystemConst {
 	//=======================================================================//
 	//                      System Common Constants                          //
 	//=======================================================================//
-	public static final int MAX_USER_NUMBER = 20;
-	public static final int MAX_POSITION_NUMBER = 5;
-	public static final int MAX_COMPANY_NUMBER = 1;
 	public static final int ORDER_ONE = 1;
 	public static final int ORDER_TWO = 2;
 	public static final int ORDER_THREE = 3;

@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright (c) 2020-2025, zening (316279828@qq.com).
+  ~ <p>
+  ~ Licensed under the Apache License, Version 2.0 (the "License"); you may not
+  ~ use this file except in compliance with the License. You may obtain a copy of
+  ~ the License at
+  ~ <p>
+  ~ https://www.apache.org/licenses/LICENSE-2.0
+  ~ <p>
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+  ~ WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+  ~ License for the specific language governing permissions and limitations under
+  ~ the License.
+  -->
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.baomibing.authority.mapper.SysTenantUserBusinessPermMapper">
+
+    <!-- 根据用户及请求的方法和URL获取读业务权限范围-->
+    <select id="getUserBusinessPermScopeByMethodAndUrl" resultType="java.lang.String">
+		SELECT ubp.perm_scope AS op_type
+	    FROM sys_business_perm_tenant bp
+		INNER JOIN sys_tenant_user_business_perm ubp ON bp.id = ubp.perm_id
+		WHERE ubp.user_id = #{userId, jdbcType=CHAR} AND ubp.org_id = #{orgId, jdbcType=CHAR}
+		AND bp.req_url  = #{url,jdbcType=CHAR} AND bp.req_method = #{method,jdbcType=CHAR}
+		and ubp.tenant_id = #{tenantId, jdbcType=CHAR}
+	</select>
+	
+	<!-- 根据用户及对应的权限动作Action获取业务权限范围 -->
+	<select id="getUserBusinessPermScopeByAction" resultType="java.lang.String">
+		SELECT ubp.perm_scope AS op_type
+	    FROM sys_business_perm_tenant bp
+		INNER JOIN sys_tenant_user_business_perm ubp ON bp.id = ubp.perm_id
+		WHERE ubp.user_id = #{userId, jdbcType=CHAR} AND ubp.org_id = #{orgId, jdbcType=CHAR}
+		AND bp.perm_action = #{action, jdbcType=CHAR} and ubp.tenant_id = #{tenantId, jdbcType=CHAR}
+	</select>
+
+
+</mapper>

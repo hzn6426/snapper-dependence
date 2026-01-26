@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright (c) 2020-2025, zening (316279828@qq.com).
+  ~ <p>
+  ~ Licensed under the Apache License, Version 2.0 (the "License"); you may not
+  ~ use this file except in compliance with the License. You may obtain a copy of
+  ~ the License at
+  ~ <p>
+  ~ https://www.apache.org/licenses/LICENSE-2.0
+  ~ <p>
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+  ~ WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+  ~ License for the specific language governing permissions and limitations under
+  ~ the License.
+  -->
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.baomibing.authority.mapper.SysTenantMapper">
+
+
+	<!-- 展示所有菜单及为分配权限-只加载需要授权的 -->
+	<select id="listTenantByCondition" resultType="com.baomibing.authority.entity.SysTenant">
+		SELECT t.id, t.`name`, t.note, t.business_id, t.root, t.simple_name, t.`state`, t.create_time, t.tenant_rank,t.score,
+		       t.create_user_cn_name, if(tu.id is null, 0, 1) as be_have_super, t.balance,t.tax_no, t.address, t.phone
+		FROM sys_tenant t
+		LEFT JOIN sys_tenant_user tu on t.id = tu.tenant_id and  LOWER(tu.user_no) = LOWER(CONCAT(t.root,'_super'))
+		<where>
+			<if test="name != null and  name != ''">
+				AND t.name LIKE CONCAT('%',#{name,jdbcType=CHAR},'%')
+			</if>
+			<if test="state != null and  state != ''">
+				AND t.state = #{state,jdbcType=CHAR}
+			</if>
+		</where>
+		order by t.create_time desc
+		LIMIT #{offset,jdbcType=INTEGER}, #{limit,jdbcType=INTEGER}
+	</select>
+
+	<select id="countTenantByCondition" resultType="java.lang.Integer">
+		select count(1)
+		FROM sys_tenant t
+		LEFT JOIN sys_tenant_user tu on t.id = tu.tenant_id and  LOWER(tu.user_no) = LOWER(CONCAT(t.root,'_super'))
+		<where>
+			<if test="name != null and  name != ''">
+				AND t.name LIKE CONCAT('%',#{name,jdbcType=CHAR},'%')
+			</if>
+			<if test="state != null and  state != ''">
+				AND t.state = #{state,jdbcType=CHAR}
+			</if>
+		</where>
+	</select>
+
+	<select id="listByKeyWord" resultType="com.baomibing.authority.entity.SysTenant">
+		SELECT t.id, t.`name`, t.note, t.business_id, t.root, t.simple_name, t.`state`
+		FROM sys_tenant t
+		WHERE state = 'ACTIVE' AND be_search = 1
+		<if test="KeyWord != null and  KeyWord != ''">
+			AND (name LIKE CONCAT('%',#{KeyWord},'%')
+			OR simple_name LIKE CONCAT('%',#{KeyWord},'%'))
+		</if>
+		ORDER BY t.create_time desc
+		LIMIT 5
+	</select>
+</mapper>

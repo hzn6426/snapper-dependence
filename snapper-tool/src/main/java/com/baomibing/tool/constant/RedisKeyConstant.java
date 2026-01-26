@@ -1,8 +1,17 @@
-/**
- * Copyright (c) 2018-2025, zening (316279828@qq.com).
+/*
+ * Copyright (c) 2020-2025, zening (316279828@qq.com).
  * <p>
- * Any unauthorised copying, selling, transferring, distributing, transmitting, renting,
- * or modifying of the Software is considered an infringement.
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy of
+ * the License at
+ * <p>
+ * https://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
  */
 package com.baomibing.tool.constant;
 
@@ -34,6 +43,12 @@ public abstract class RedisKeyConstant {
     public static final String CACHE_API_PREFIX = SNAPPER_PREFIX + "auth_api_";
     //按钮权限全追
     public static final String KEY_BUTTON_PERM_CONTEXT = SNAPPER_PREFIX + "key_button_perm_context";
+
+    //=======================================================================//
+    //                      Action Module Redis Key                          //
+    //=======================================================================//
+
+    public static final String KEY_ACTION_CONNECT_PREFIX = SNAPPER_PREFIX + "key_action_connect_prefix";
 
     //=======================================================================//
     //                     User Context Redis Key                            //
@@ -91,6 +106,13 @@ public abstract class RedisKeyConstant {
 
     public static final String KEY_USER_GATE_WAY_ID = SNAPPER_PREFIX + "key_user_gate_way_id_{0}";
 
+    public static final String CACHE_RETRY_IP_PREFIX = SNAPPER_PREFIX + "_retry_web_ip_login_jwt_{0}";
+    // 规则tag 前缀
+    public static final String KEY_RULE_TAG_PREFIX = SNAPPER_PREFIX + "KEY_RULE_TAG_";
+    //规则 ID 前缀
+    public static final String KEY_RULE_ID_PREFIX = SNAPPER_PREFIX + "KEY_RULE_ID_";
+    //规则追加的 GROOVY 代码
+    public static final String KEY_RULE_APPEND_SCRIPT = SNAPPER_PREFIX + "KEY_RULE_APPEND_SCRIPT";
 
     //=======================================================================//
     //                      Menu Module Redis Key                            //

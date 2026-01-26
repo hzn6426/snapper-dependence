@@ -1,17 +1,26 @@
-/**
- * Copyright (c) 2018-2025, zening (316279828@qq.com).
+
+/*
+ * Copyright (c) 2020-2025, zening (316279828@qq.com).
  * <p>
- * Any unauthorised copying, selling, transferring, distributing, transmitting, renting,
- * or modifying of the Software is considered an infringement.
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy of
+ * the License at
+ * <p>
+ * https://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
  */
+
 package com.baomibing.authority.controller;
 
 
 import com.baomibing.authority.dto.PositionDto;
-import com.baomibing.authority.service.SysPositionGroupEntrustService;
 import com.baomibing.authority.service.SysPositionRoleService;
 import com.baomibing.authority.service.SysPositionService;
-import com.baomibing.authority.service.SysPositionUserEntrustService;
 import com.baomibing.authority.vo.PositionRoleVo;
 import com.baomibing.core.common.Assert;
 import com.baomibing.core.common.SearchResult;
@@ -39,8 +48,6 @@ import java.util.List;
 public class PositionController extends MBaseController<PositionDto> {
 
     @Autowired private SysPositionService positionService;
-	@Autowired private SysPositionUserEntrustService positionUserEntrustService;
-	@Autowired private SysPositionGroupEntrustService positionGroupEntrustService;
 	@Autowired private SysPositionRoleService positionRoleService;
 
     /**
@@ -159,15 +166,7 @@ public class PositionController extends MBaseController<PositionDto> {
 	 * @return
 	 */
 	@GetMapping("/listEntrusIdsByPosition")
-	public List<String> listEntrusIdsByPosition(@RequestParam String pid) {
-//		List<UserDto> entrustUsers = positionUserEntrustService.listEntrustUsersByPosition(pid);
-//		// 用于渲染树，ID是唯一的，可能一个用户位于两个组织中，此处需要连接父组织ID
-//		List<String> entrustUids = entrustUsers.stream().map(u -> u.getGroupId() + '#' + u.getId())
-//				.collect(Collectors.toList());
-//		List<GroupDto> entrustGroups = positionGroupEntrustService.listEntrustGroupsByPosition(pid);
-//		List<String> entrustGids = entrustGroups.stream().map(g -> g.getId()).collect(Collectors.toList());
-//		entrustUids.addAll(entrustGids);
-//		return entrustUids;
+	public List<String> listEntrustIdsByPosition(@RequestParam String pid) {
         return positionService.listEntrustIdsByPosition(pid);
 	}
 

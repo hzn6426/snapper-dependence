@@ -1,4 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright (c) 2020-2025, zening (316279828@qq.com).
+  ~ <p>
+  ~ Licensed under the Apache License, Version 2.0 (the "License"); you may not
+  ~ use this file except in compliance with the License. You may obtain a copy of
+  ~ the License at
+  ~ <p>
+  ~ https://www.apache.org/licenses/LICENSE-2.0
+  ~ <p>
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+  ~ WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+  ~ License for the specific language governing permissions and limitations under
+  ~ the License.
+  -->
+
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.baomibing.authority.mapper.SysRoleResourceMapper">
 
@@ -219,7 +235,7 @@
 		 LEFT JOIN sys_uset_business_perm sbp ON sbp.perm_id = bp.id AND ur.uset_id = sbp.uset_id
 		 LEFT JOIN sys_uset_data_perm sdp ON sdp.perm_id = bp.id AND ur.uset_id = sdp.uset_id
 		 LEFT JOIN sys_uset_column_perm scp ON scp.perm_id = bp.id AND ur.uset_id = scp.uset_id
-		WHERE ur.uset_id = #{usetId,jdbcType=CHAR} AND  sb.be_unauth = 0
+		WHERE ur.uset_id = #{usetId,jdbcType=CHAR} AND sb.be_unauth = 0
 		ORDER BY sb.sub_menu DESC
 
 	</select>
@@ -227,7 +243,7 @@
 	<!-- 根据角色列表获取按钮列表 -->
 	<select id="listPermButtonsByRoles" resultType="com.baomibing.authority.entity.SysButton">
 		SELECT DISTINCT sb.id, sb.button_name,sb.be_unauth, sb.sub_menu, sb.menu_id, bp.id as perm_id,
-		bp.perm_action
+		 bp.perm_action
 		FROM sys_button sb
 		INNER JOIN sys_role_resource srr ON sb.id = srr.resource_id AND srr.resource_type = 'BUTTON'
 		INNER JOIN sys_user_role ur ON ur.role_id = srr.role_id
@@ -245,7 +261,7 @@
 	<!-- 根据用户及权限获取对应的权限范围信息	-->
 	<select id="listUserPermScopeByPerm" resultType="com.baomibing.authority.entity.SysButton">
 		SELECT bp.id as perm_id,IFNULL(sbp.perm_scope, 'CURRENT_USER') AS perm_scope,
-		sbp.perm_start_time, sbp.perm_end_time, bp.perm_action
+			   sbp.perm_start_time, sbp.perm_end_time, bp.perm_action
 		FROM sys_business_perm bp
 		LEFT JOIN sys_user_business_perm sbp ON sbp.perm_id = bp.id
 		<where>
@@ -260,10 +276,12 @@
 		FROM sys_business_perm bp
 		LEFT JOIN sys_uset_business_perm sbp ON sbp.perm_id = bp.id
 		<where>
-			bp.id = #{permId} AND sbp.uset_id  IN
+			 bp.id = #{permId} AND sbp.uset_id  IN
 			<foreach collection="usetIdList" index="index" item="item" open="(" separator="," close=")">
 				#{item}
 			</foreach>
 		</where>
 	</select>
+
+
 </mapper>

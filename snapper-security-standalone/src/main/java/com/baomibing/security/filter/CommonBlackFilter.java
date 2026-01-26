@@ -1,3 +1,19 @@
+/*
+ * Copyright (c) 2020-2025, zening (316279828@qq.com).
+ * <p>
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy of
+ * the License at
+ * <p>
+ * https://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
+ */
+
 package com.baomibing.security.filter;
 
 
@@ -6,6 +22,7 @@ import com.baomibing.tool.constant.WebConstant;
 import com.baomibing.tool.util.Checker;
 import com.baomibing.web.common.MultiHeaderHttpServletRequest;
 import inet.ipaddr.IPAddressString;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 
@@ -23,13 +40,15 @@ import java.util.concurrent.CopyOnWriteArraySet;
  * @author zening 2023/9/6 10:00
  * @version 1.0.0
  **/
+@Slf4j
 public class CommonBlackFilter extends BaseFilter {
+
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         MultiHeaderHttpServletRequest mrequest = new MultiHeaderHttpServletRequest(request);
         String ip = getIP(mrequest);
-        addHeader(request, UserHeaderConstant.USER_IP, ip);
+        addHeader(mrequest, UserHeaderConstant.USER_IP, ip);
         if (matchWhiteList(mrequest.getRequestURI())) {
             filterChain.doFilter(mrequest, response);
         }

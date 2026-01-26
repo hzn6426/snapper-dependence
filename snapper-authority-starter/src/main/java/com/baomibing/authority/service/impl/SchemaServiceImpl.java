@@ -1,4 +1,20 @@
 
+/*
+ * Copyright (c) 2020-2025, zening (316279828@qq.com).
+ * <p>
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy of
+ * the License at
+ * <p>
+ * https://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
+ */
+
 package com.baomibing.authority.service.impl;
 
 import com.baomibing.authority.service.SchemaService;
@@ -103,9 +119,9 @@ public class SchemaServiceImpl implements SchemaService {
         String countSql = "select count(1) as count_no ";
         StringBuilder sql = new StringBuilder(
                 "from information_schema.`TABLES` t " +
-                "where " +
-//                " t.`TABLE_NAME` not like 'sys%' and" +
-                " t.table_schema='" + schema + "'");
+                "where "
+//                + "t.`TABLE_NAME` not like 'sys% and"
+                + " t.table_schema='" + schema + "'");
         boolean beCondition = Checker.beNotEmpty(table.getTableName()) && Checker.beNotEmpty(table.getTableComment());
         if (beCondition) {
             sql.append(" AND (").append(" t.`TABLE_NAME` like '% + table.getTableName() + %'").append(" OR ").append(" t.`TABLE_COMMENT` like '%" + table.getTableComment() + "%')");

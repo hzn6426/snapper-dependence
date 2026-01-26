@@ -1,8 +1,17 @@
-/**
- * Copyright (c) 2018-2025, zening (316279828@qq.com).
+/*
+ * Copyright (c) 2020-2025, zening (316279828@qq.com).
  * <p>
- * Any unauthorised copying, selling, transferring, distributing, transmitting, renting,
- * or modifying of the Software is considered an infringement.
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy of
+ * the License at
+ * <p>
+ * https://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
  */
 package com.baomibing.core.exception;
 
@@ -108,7 +117,10 @@ public enum ExceptionEnum implements ExceptionEnumable{
 	ROOT_GROUP_NOT_BE_DELETE(100174, "根组织无法删除！"),
 	TENANT_GROUP_CODE_EXCEED(100175, "无法初始化租户编码，请联系管理员处理!"),
 	TENANT_ROOT_USER_NOT_BE_DELETED(100176,"租户超级用户无法删除!"),
-	CAN_NOT_FIND_ID_OF_FUNCTION(100177, "无法找到ID:{0}对应的功能!")
+	CAN_NOT_FIND_ID_OF_FUNCTION(100177, "无法找到ID:{0}对应的功能!"),
+    RULE_ENGINE_BUSINESS_EXCEPTION(100178, "规则引擎业务异常,异常信息为:{0}！"),
+    CAN_NOT_FIND_ID_OF_RULE_IN_CACHE(100179, "在缓存中无法找到ID:{0}对应的规则!"),
+    RULE_DEBUG_EXECUTE_EXCEPTION(100180, "规则执行错误(调试模式),异常信息为:{0}");
 	;
 
 	

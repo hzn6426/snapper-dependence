@@ -1,13 +1,33 @@
+/*
+ * Copyright (c) 2020-2025, zening (316279828@qq.com).
+ * <p>
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy of
+ * the License at
+ * <p>
+ * https://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
+ */
+
 package com.baomibing.security.filter;
 
 import com.alibaba.fastjson.JSONObject;
+import com.baomibing.authority.exception.AuthorizationExceptionEnum;
+import com.baomibing.core.exception.ServerRuntimeException;
 import com.baomibing.security.rule.RateLimitRule;
 import com.baomibing.tool.constant.RedisKeyConstant;
 import com.baomibing.tool.constant.Strings;
 import com.baomibing.tool.constant.UserHeaderConstant;
 import com.baomibing.tool.constant.WebConstant;
 import com.baomibing.tool.limit.*;
+import com.baomibing.tool.user.RequestContext;
 import com.baomibing.tool.util.Checker;
+import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -19,11 +39,13 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.text.MessageFormat;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * RateLimitFilter
@@ -65,12 +87,41 @@ public class RateLimitFilter extends BaseFilter {
         return cacheLimit;
     }
 
+    private void checkLockIp(HttpServletRequest request) {
+        String ip = RequestContext.reqIp();
+        //检查是否超过重复登录次数
+        String retryCacheKey = MessageFormat.format(RedisKeyConstant.CACHE_RETRY_IP_PREFIX, ip);
+
+        int retryTime = Integer.parseInt(Optional.fromNullable(cacheService.get(retryCacheKey)).or("0"));
+
+        // 如果重试次数超出则抛出异常
+        if (retryTime > 3) {
+            throw new ServerRuntimeException(AuthorizationExceptionEnum.USER_IP_LOCKED, ip);
+        }
+
+        AtomicInteger atomicInteger = new AtomicInteger(retryTime);
+        int number = atomicInteger.incrementAndGet();
+
+
+        long ONE_DAY = 60 * 60 * 24 * 7;
+        cacheService.set(retryCacheKey, String.valueOf(number), ONE_DAY);
+
+    }
+
+    private void beLockIp(HttpServletRequest request) {
+        String ip = RequestContext.reqIp();
+        String retryCacheKey = MessageFormat.format(RedisKeyConstant.CACHE_RETRY_IP_PREFIX, ip);
+        int retryTime = Integer.parseInt(Optional.fromNullable(cacheService.get(retryCacheKey)).or("0"));
+        if (retryTime > 3) {
+            throw new ServerRuntimeException(AuthorizationExceptionEnum.USER_IP_LOCKED, ip);
+        }
+    }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         String url = request.getRequestURI();
 
-
+        beLockIp( request);
         if (matchWhiteList(url)) {
             filterChain.doFilter(request, response);
             return;
@@ -96,6 +147,8 @@ public class RateLimitFilter extends BaseFilter {
                     return;
                 } else {
                     response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
+                    //超过3次限流封IP
+                    checkLockIp(request);
                     return;
                 }
             }

@@ -1,10 +1,26 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright (c) 2020-2025, zening (316279828@qq.com).
+  ~ <p>
+  ~ Licensed under the Apache License, Version 2.0 (the "License"); you may not
+  ~ use this file except in compliance with the License. You may obtain a copy of
+  ~ the License at
+  ~ <p>
+  ~ https://www.apache.org/licenses/LICENSE-2.0
+  ~ <p>
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+  ~ WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+  ~ License for the specific language governing permissions and limitations under
+  ~ the License.
+  -->
+
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.baomibing.authority.mapper.SysButtonMapper">
 
     <!-- 根据条件分页查询按钮及API信息 -->
     <select id="listButtonAndApiByMenu" resultType="com.baomibing.authority.entity.SysButton">
-        SELECT b.id, b.be_unauth,be_login_unauth,b.be_lock, b.button_name, b.menu_id, b.sub_menu, b.note, api.req_method, api.req_url, sbp.id as perm_id, sbp.perm_action, sbp.action_ref
+        SELECT b.id, b.be_unauth,b.be_login_unauth,b.be_lock, b.button_name, b.menu_id, b.sub_menu, b.note, api.req_method, api.req_url, sbp.id as perm_id, sbp.perm_action, sbp.action_ref
         FROM sys_button b
         LEFT JOIN sys_resource_api api ON b.id = api.resource_id AND api.resource_type = 'BUTTON'
         LEFT JOIN sys_business_perm sbp on sbp.button_id = b.id

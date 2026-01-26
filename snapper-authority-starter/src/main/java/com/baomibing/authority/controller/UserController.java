@@ -1,9 +1,20 @@
-/**
- * Copyright (c) 2018-2025, zening (316279828@qq.com).
+
+/*
+ * Copyright (c) 2020-2025, zening (316279828@qq.com).
  * <p>
- * Any unauthorised copying, selling, transferring, distributing, transmitting, renting,
- * or modifying of the Software is considered an infringement.
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy of
+ * the License at
+ * <p>
+ * https://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
  */
+
 package com.baomibing.authority.controller;
 
 import com.baomibing.authority.constant.enums.MenuTypeEnum;
@@ -14,7 +25,6 @@ import com.baomibing.authority.exception.AuthorizationExceptionEnum;
 import com.baomibing.authority.exception.UserNameNotFoundException;
 import com.baomibing.authority.service.*;
 import com.baomibing.core.common.Assert;
-import com.baomibing.core.common.CollectionMapperDecorator;
 import com.baomibing.core.common.SearchResult;
 import com.baomibing.core.exception.ExceptionEnum;
 import com.baomibing.core.exception.ServerRuntimeException;
@@ -53,7 +63,6 @@ public class UserController extends MBaseController<UserDto> {
     @Autowired private SysUserService userService;
     @Autowired private SysRoleResourceService roleResourceService;
     @Autowired private SysUserRoleService userRoleService;
-    @Autowired CollectionMapperDecorator decorator;
     //获取职位和部门信息
     @Autowired SysPositionService positionService;
     @Autowired SysGroupService groupService;
@@ -145,7 +154,7 @@ public class UserController extends MBaseController<UserDto> {
     public List<MenuDto> listAllMenusOfAdmin() {
         return roleResourceService.listAllPermPointMenusByRoles(currentUserRoles(), MenuTypeEnum.ADMIN);
     }
-    
+
     /**
      * 获取用户权限对应的按钮信息
      *
@@ -256,7 +265,6 @@ public class UserController extends MBaseController<UserDto> {
         if (groupName.contains("-")) {
             u.setDepartName(groupName.split("-")[1].trim());
         }
-//        u.setGroupName(URLUtil.decode(currentUserGroupName()));
         u.setGroupId(currentUserGroupId());
 
         return u;
@@ -506,7 +514,8 @@ public class UserController extends MBaseController<UserDto> {
         }
         menus.forEach(m -> {
             CommonTreeWrap wrap = new CommonTreeWrap().setTitle(m.getName()).setKey(m.getId()).setMenuType(m.getMenuType())
-                    .setTag(m.getTag()).setIsLeaf(Checker.beEmpty(m.getChildren())).setBeUnAuth(m.getBeUnauth()).setPermId(m.getPermId());
+                    .setTag(m.getTag()).setIsLeaf(Checker.beEmpty(m.getChildren())).setBeUnAuth(m.getBeUnauth())
+                    .setPermId(m.getPermId());
             List<CommonTreeWrap> cmenus = loopMenus(m.getChildren());
             wrap.setChildren(cmenus);
             list.add(wrap);

@@ -1,3 +1,19 @@
+/*
+ * Copyright (c) 2020-2025, zening (316279828@qq.com).
+ * <p>
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy of
+ * the License at
+ * <p>
+ * https://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
+ */
+
 package com.baomibing.authority.service;
 
 
@@ -53,10 +69,11 @@ public interface SysGroupService extends MBaseService<GroupDto> {
 	 *
 	 * @param ogid  源组织ID
 	 * @param togid 目标组织ID
+     * @param beSyncUserPerm 是否同步权限
 	 * @param users 移动的用户ID列表
 	 * @Return: void
 	 */
-	void doMoveGroupUsers(String ogid, String togid, Set<String> users);
+	void doMoveGroupUsers(String ogid, String togid, boolean beSyncUserPerm, Set<String> users);
 
 	/**
 	 * 删除成员
@@ -152,5 +169,28 @@ public interface SysGroupService extends MBaseService<GroupDto> {
 	 * @Return: java.util.List<com.baomibing.authority.dto.GroupDto>
 	 */
 	List<GroupDto> listBranchCompanines();
+
+    /**
+     * 根据当前的用户组织 ID 对列表中的用户的权限更新成最新的组织 ID
+     * @param users 用户ID列表
+     * @param ogid 旧组织 ID
+     * @param togid 新的组织 ID
+     */
+    void syncUserPermsByGroup(Set<String> users, String ogid, String togid);
+
+    /**
+     * 根据组织 ID 删除用户权限
+     * @param users 用户 ID 列表
+     * @param oldGroupId 旧组织 ID
+     */
+    void deleteUserPermsByGroup(Set<String> users, String oldGroupId);
+
+    /**
+     * 复制用户权限给另一个用户，用户必须在同一个组织内
+     * @param uid   待复制的用户
+     * @param gid   待复制的用户组织
+     * @param toUserId 复制权限的目标用户
+     */
+    void doCopyUserPerm(String uid, String gid, String toUserId);
 
 }

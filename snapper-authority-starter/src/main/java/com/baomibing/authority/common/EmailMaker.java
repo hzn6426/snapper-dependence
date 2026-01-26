@@ -1,12 +1,22 @@
-/**
- * Copyright (c) 2018-2025, zening (316279828@qq.com).
+/*
+ * Copyright (c) 2020-2025, zening (316279828@qq.com).
  * <p>
- * Any unauthorised copying, selling, transferring, distributing, transmitting, renting,
- * or modifying of the Software is considered an infringement.
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy of
+ * the License at
+ * <p>
+ * https://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
  */
 package com.baomibing.authority.common;
 
 import com.baomibing.authority.bo.EmailBO;
+import com.baomibing.authority.dto.SysTenantUserDto;
 import com.baomibing.authority.dto.UserDto;
 import com.google.common.collect.Lists;
 
@@ -68,6 +78,51 @@ public class EmailMaker {
 //		if (Checker.BeNotEmpty(cc)) {
 //			email.setCc(cc);
 //		}
+        return email;
+    }
+
+    public static EmailBO makeTenantUserActiveEmail(SysTenantUserDto user) {
+        String title = user.getTitlePrefix() + "服务平台 - 激活成功！";
+        String messageBuilder = "<html><META http-equiv=Content-Type content=\"text/html; " +
+                "charset=utf-8\"><body>" +
+                "<table width='900px' style='margin: 0 auto'><tbody>" +
+                "<tr><td style='height: 10px;width:100%;padding:0;margin: 0 auto;background: #383D41;'></td></tr>" +
+                "<tr style=\"min-height: 240px;width: 100%;margin-bottom: 20px;\">" +
+                "<td style=\"padding: 26px 46px;border: 1px #ECECEC solid;position: relative;\"> <span style=\"width: 8px;height: 35px;display: table-cell;background: #00C6FF;position: absolute;left: 30px;\"></span>" +
+                "<h3 style=\"display: table-cell;margin: 0;padding: 0;font-size: 20px;line-height: 30px;\"> 恭喜您，成为" + user.getTitlePrefix() + "平台用户！ </h3>" +
+                "<p style=\"margin: 10px 30px;padding: 0;font-size: 20px;\"> 账 号：" + user.getUserName() + " </p>" +
+                "<p style=\"margin: 10px 30px;padding: 0;font-size: 20px;\"> 密 码：" + user.getUnencryptPassword() + " </p>" +
+                "<p style=\"margin: 40px 30px;padding: 0;font-size: 14px;\"> " + user.getTitlePrefix() + "平台网址：<a href=\"" + user.getWebsiteUrl() + "\" target=\"_blank\" rel=\"noopener\">" + user.getWebsiteUrl() + "</a> </p>" +
+                "<a style=\"cursor: pointer;outline: none;text-decoration: none;width: 134px;height: 40px;margin-top: 36px;line-height: 40px;text-align:center;display: inline-block;background: #00C6FF;"
+                + "color: #fff;font-weight: 450;\" href=\"" + user.getWebsiteUrl() + "\"  target=\"_blank\" rel=\"noopener\"> 马上登录 </a>" +
+                "<p style=\"margin: 10px 30px;padding: 0;font-size: 20px;\"> 如有系统使用问题可联系小组组长或部门负责人，进专门的问题解决群反馈处理。</p>" +
+
+                "</td></tr></tbody></table></body></html>";
+        EmailBO email = new EmailBO();
+        email.setSubject(title).setFrom(null).setTo(user.getUserEmail()).setAttchments(Lists.newArrayList()).setMessage(messageBuilder);
+//		if (Checker.BeNotEmpty(cc)) {
+//			email.setCc(cc);
+//		}
+        return email;
+    }
+
+    public static EmailBO makeTenantUserResetPasswdEmail(SysTenantUserDto user) {
+        String title = user.getTitlePrefix() + "服务平台 - 密码重置成功！";
+        String messageBuilder = "<html><META http-equiv=Content-Type content=\"text/html; " +
+                "charset=utf-8\"><body>" +
+                "<table width='900px' style='margin: 0 auto'><tbody>" +
+                "<tr><td style='height: 10px;width:100%;padding:0;margin: 0 auto;background: #383D41;'></td></tr>" +
+                "<tr style=\"min-height: 240px;width: 100%;margin-bottom: 20px;\">" +
+                "<td style=\"padding: 26px 46px;border: 1px #ECECEC solid;position: relative;\"> <span style=\"width: 8px;height: 35px;display: table-cell;background: #00C6FF;position: absolute;left: 30px;\"></span>" +
+                "<h3 style=\"display: table-cell;margin: 0;padding: 0;font-size: 20px;line-height: 30px;\"> 您的密码已被重置，具体如下： </h3>" +
+                "<p style=\"margin: 10px 30px;padding: 0;font-size: 20px;\"> 账 号：" + user.getUserName() + " </p>" +
+                "<p style=\"margin: 10px 30px;padding: 0;font-size: 20px;\"> 密 码：" + user.getUnencryptPassword() + " </p>" +
+                "<p style=\"margin: 40px 30px;padding: 0;font-size: 14px;\"> " + user.getTitlePrefix() + "平台网址：<a href=\"" + user.getWebsiteUrl() + "\" target=\"_blank\" rel=\"noopener\">" + user.getWebsiteUrl() + "</a> </p>" +
+                "<a style=\"cursor: pointer;outline: none;text-decoration: none;width: 134px;height: 40px;margin-top: 36px;line-height: 40px;text-align:center;display: inline-block;background: #00C6FF;"
+                + "color: #fff;font-weight: 450;\" href=\"" + user.getWebsiteUrl() + "\"  target=\"_blank\" rel=\"noopener\"> 马上登录 </a>" +
+                "</td></tr></tbody></table></body></html>";
+        EmailBO email = new EmailBO();
+        email.setSubject(title).setFrom(null).setTo(user.getUserEmail()).setAttchments(Lists.newArrayList()).setMessage(messageBuilder);
         return email;
     }
 

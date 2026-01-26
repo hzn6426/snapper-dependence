@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright (c) 2020-2025, zening (316279828@qq.com).
+  ~ <p>
+  ~ Licensed under the Apache License, Version 2.0 (the "License"); you may not
+  ~ use this file except in compliance with the License. You may obtain a copy of
+  ~ the License at
+  ~ <p>
+  ~ https://www.apache.org/licenses/LICENSE-2.0
+  ~ <p>
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+  ~ WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+  ~ License for the specific language governing permissions and limitations under
+  ~ the License.
+  -->
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.baomibing.authority.mapper.SysDictChildTenantMapper">
+
+    <update id="updateDictChildDeleteByIds">
+        UPDATE sys_dict_child_tenant
+        SET be_delete = 1
+        WHERE id IN
+            <foreach collection="childIds" index="index" item="item" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+    </update>
+
+	<!-- 根据父编码获取子项列表 -->
+	<select id="listByParentCode" resultType="com.baomibing.authority.entity.SysDictChildTenant">
+		SELECT child.id, child.dict_code, child.dict_name, child.parent_id, child.`state` 
+		FROM sys_dict_child_tenant child
+		INNER JOIN sys_dictionary_tenant dict ON child.parent_id = dict.id
+		WHERE dict.dict_code = #{parentCode,jdbcType=CHAR} AND child.be_delete = '0'
+		ORDER BY child.priority ASC
+	</select>
+	
+	<!-- 根据父编码列表获取子项列表-->
+	<select id="listByParentCodes" resultType="com.baomibing.authority.entity.SysDictChildTenant">
+		SELECT child.id, child.dict_code, child.dict_name, child.parent_id, child.`state`, dict.dict_code as parent_code
+		FROM sys_dict_child_tenant child
+		INNER JOIN sys_dictionary_tenant dict ON child.parent_id = dict.id
+		WHERE child.be_delete = '0' AND dict.dict_code IN 
+		<foreach collection="parentCodes" index="index" item="item" open="(" separator="," close=")">
+        	#{item}
+        </foreach>
+	</select>
+</mapper>

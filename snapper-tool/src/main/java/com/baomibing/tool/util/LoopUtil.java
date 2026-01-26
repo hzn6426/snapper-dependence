@@ -1,8 +1,17 @@
-/**
- * Copyright (c) 2018-2025, zening (316279828@qq.com).
+/*
+ * Copyright (c) 2020-2025, zening (316279828@qq.com).
  * <p>
- * Any unauthorised copying, selling, transferring, distributing, transmitting, renting,
- * or modifying of the Software is considered an infringement.
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy of
+ * the License at
+ * <p>
+ * https://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
  */
 package com.baomibing.tool.util;
 
@@ -25,7 +34,7 @@ import static java.util.Collections.emptyMap;
  * <li>抽取集合中对象属性的方法</li>
  * <li>分组集合中对象属性的方法</li>
  * </ol>
- *
+ * 
  * @author zening
  * @since 1.0.0
  */
@@ -33,7 +42,7 @@ public abstract class LoopUtil {
 
 	/**
 	 * 执行循环体操作闭包操作
-	 *
+	 * 
 	 * @param <I>      循环体中对象的类型
 	 * @param iterable 循环体对象
 	 * @param closure  闭包对象
@@ -44,7 +53,7 @@ public abstract class LoopUtil {
 
 	/**
 	 * 将循环体中属性为 <code>propertyName</code> 对应的值修改为<code>propertyValue</code>
-	 *
+	 * 
 	 * @param <I>           循环体中对象类型
 	 * @param beanIterable  循环体
 	 * @param propertyName  属性名称
@@ -52,7 +61,7 @@ public abstract class LoopUtil {
 	 * @return 修改成功为true,否则为false
 	 */
 	public static <I> boolean changePropertyValue(final Iterable<I> beanIterable, String propertyName,
-												  Object propertyValue) {
+			Object propertyValue) {
 		if (Checker.beNotEmpty(beanIterable)) {
 			IterableUtils.forEach(beanIterable, new BeanPropertyValueChangeClosure<I>(propertyName, propertyValue));
 			return true;
@@ -63,7 +72,7 @@ public abstract class LoopUtil {
 	/**
 	 * 将循环体中属性为 <code>propertyName</code>
 	 * 对应的值在<code>predicate</code>成立的情况下修改为<code>propertyValue</code>
-	 *
+	 * 
 	 * @param <I>           循环体中对象类型
 	 * @param beanIterable  循环体
 	 * @param predicate     预言条件
@@ -72,7 +81,7 @@ public abstract class LoopUtil {
 	 * @return 修改成功为true,否则为false
 	 */
 	public static <I> boolean changePropertyValue(final Iterable<I> beanIterable, Predicate<I> predicate,
-												  String propertyName, Object propertyValue) {
+			String propertyName, Object propertyValue) {
 		if (Checker.beNotEmpty(beanIterable)) {
 			BeanPropertyValueChangeClosure<I> changeClosure = new BeanPropertyValueChangeClosure<I>(propertyName,
 					propertyValue);
@@ -85,7 +94,7 @@ public abstract class LoopUtil {
 
 	/**
 	 * 将循环体中的对象满足<code>predicate</code>条件时，对多个属性进行修改，按照<code>propertyValueMap<属性名,属性值></code>方式修改
-	 *
+	 * 
 	 * @param <I>              循环体中对象类型
 	 * @param beanIterable     循环体
 	 * @param predicate        预言条件
@@ -93,7 +102,7 @@ public abstract class LoopUtil {
 	 * @return 修改成功为true,否则为false
 	 */
 	public static <I> boolean changePropertyValue(final Iterable<I> beanIterable, Predicate<I> predicate,
-												  Map<String, Object> propertyValueMap) {
+			Map<String, Object> propertyValueMap) {
 		if (Checker.beNotEmpty(beanIterable) && Checker.beNotEmpty(propertyValueMap)) {
 			MapIterator<String, Object> mapIter = MapUtils.iterableMap(propertyValueMap).mapIterator();
 			List<BeanPropertyValueChangeClosure<I>> changedList = new LinkedList<>();
@@ -110,7 +119,7 @@ public abstract class LoopUtil {
 
 	/**
 	 * 将循环体中的对象按照闭包的规则进行修改
-	 *
+	 * 
 	 * @param <I>            循环体中对象类型
 	 * @param beanIterable   循环体
 	 * @param changeClosures 属性修改闭包
@@ -118,7 +127,7 @@ public abstract class LoopUtil {
 	 */
 	@SafeVarargs
 	public static <I> boolean changePropertyValue(final Iterable<I> beanIterable,
-												  BeanPropertyValueChangeClosure<I>... changeClosures) {
+			BeanPropertyValueChangeClosure<I>... changeClosures) {
 		if (Checker.beNotEmpty(beanIterable) && Checker.beNotEmpty(changeClosures)) {
 			ChainedClosure<I> chainClosure = (ChainedClosure<I>) ChainedClosure.chainedClosure(changeClosures);
 			IterableUtils.forEach(beanIterable, chainClosure);
@@ -129,14 +138,14 @@ public abstract class LoopUtil {
 
 	/**
 	 * 将循环体中的多个属性进行修改，按照<code>propertyValueMap<属性名,属性值></code>方式修改
-	 *
+	 * 
 	 * @param <I>              循环体中对象类型
 	 * @param beanIterable     循环体
 	 * @param propertyValueMap 属性，属性值映射表
 	 * @return 修改成功为true,否则为false
 	 */
 	public static <I> boolean changePropertyValue(final Iterable<I> beanIterable,
-												  Map<String, Object> propertyValueMap) {
+			Map<String, Object> propertyValueMap) {
 		if (Checker.beNotEmpty(beanIterable) && Checker.beNotEmpty(propertyValueMap)) {
 			MapIterator<String, Object> mapIter = MapUtils.iterableMap(propertyValueMap).mapIterator();
 			List<BeanPropertyValueChangeClosure<I>> changedList = new LinkedList<>();
@@ -152,7 +161,7 @@ public abstract class LoopUtil {
 
 	/**
 	 * 将循环体中属性为<code>propertyName</code>对应的值以set的形式返回
-	 *
+	 * 
 	 * @param <T>          返回的set集合中的对象类型
 	 * @param <I>          循环体中的对象类型
 	 * @param beanIterable 循环体
@@ -165,7 +174,7 @@ public abstract class LoopUtil {
 
 	/**
 	 * 将循环体属性为<code>propertyName</code> 对应的值封装成<code>returnCollection</code>集合返回
-	 *
+	 * 
 	 * @param <T>              返回集合对应的对象类型
 	 * @param <I>              循环体中的对象类型
 	 * @param <K>              传入的集合中对象类型
@@ -175,7 +184,7 @@ public abstract class LoopUtil {
 	 * @return 循环体中属性对应的值的集合
 	 */
 	private static <T, I, K extends Collection<T>> K getPropertyValueCollection(Iterable<I> beanIterable,
-																				String propertyName, K returnCollection) {
+			String propertyName, K returnCollection) {
 		Validate.notNull(returnCollection, "returnCollection can't be null!");
 		if (!Checker.beNotEmpty(beanIterable)) {// 避免null point
 			return returnCollection;
@@ -189,7 +198,7 @@ public abstract class LoopUtil {
 
 	/**
 	 * 将循环体中属性为<code>propertyName</code> 的值以列表的方式返回
-	 *
+	 * 
 	 * @param <T>          返回列表中对象类型
 	 * @param <I>          循环体对象类型
 	 * @param beanIterable 循环体
@@ -209,7 +218,7 @@ public abstract class LoopUtil {
 
 	/**
 	 * 将循环体中属性为<code>propertyName</code> 的值以列表的方式返回(值不重复)
-	 *
+	 * 
 	 * @param <T>          返回列表中对象类型
 	 * @param <I>          循环体对象类型
 	 * @param beanIterable 循环体
@@ -230,7 +239,7 @@ public abstract class LoopUtil {
 	/**
 	 * 将循环体中以属性<code>keyPropertyName</code>对应的值为key，以属性<code>valuePropertyName</code>对应的值为value
 	 * 返回map
-	 *
+	 * 
 	 * @param <K>               map对应的key类型
 	 * @param <V>               map对应的value类型
 	 * @param <I>               循环体对象类型
@@ -240,7 +249,7 @@ public abstract class LoopUtil {
 	 * @return 操作后的Map
 	 */
 	public static <K, V, I> Map<K, V> mapPropertyValue(Iterable<I> beanIterable, String keyPropertyName,
-													   String valuePropertyName) {
+			String valuePropertyName) {
 		if (beanIterable == null) {
 			return new LinkedHashMap<K, V>();
 		}
@@ -253,7 +262,7 @@ public abstract class LoopUtil {
 
 	/**
 	 * 查找循环体中查找循环体中属性名为<code>propertyName</code>，值为<code>propertyValue</code>的对象对应的索引，并返回（第一个匹配）
-	 *
+	 * 
 	 * @param <I>           循环体中对象的类型
 	 * @param <V>           属性值类型
 	 * @param beanIterable  循环体
@@ -267,7 +276,7 @@ public abstract class LoopUtil {
 
 	/**
 	 * 查找循环体中属性名为<code>propertyName</code>，值为<code>propertyValue</code>的对象，并返回（第一个匹配）
-	 *
+	 * 
 	 * @param <I>           循环体中对象的类型
 	 * @param <V>           属性值类型
 	 * @param beanIterable  循环体
@@ -284,33 +293,33 @@ public abstract class LoopUtil {
 	 * <p>
 	 * <b>场景:</b> 从list中查找name是 关羽,并且 age等于30的User对象
 	 * </p>
-	 *
+	 * 
 	 * <pre class="code">
 	 * List{@code <User>} list = toList(
 	 *   new User("张飞", 23),
 	 *   new User("关羽", 24),
 	 *   new User("刘备", 25),
 	 *   new User("关羽", 30));
-	 *
+	 * 
 	 * Map{@code <String, Object>} map = new HashMap{@code <>}();
 	 * map.put("name", "关羽");
 	 * map.put("age", 30);
-	 *
+	 * 
 	 * Predicate{@code <User>} predicate = BeanPredicateUtil.equalPredicate(map);
-	 *
+	 * 
 	 * User user = LoopUtil.find(list, predicate);
 	 * LOGGER.debug(JsonUtil.format(user));
 	 * </pre>
-	 *
+	 * 
 	 * <b>返回:</b>
-	 *
+	 * 
 	 * <pre class="code">
 	 * {
 	 * "age": 30,
 	 * "name": "关羽"
 	 * }
 	 * </pre>
-	 *
+	 * 
 	 * @param <I>       循环体中对象的类型
 	 * @param iterable  循环体
 	 * @param predicate 预言
@@ -322,7 +331,7 @@ public abstract class LoopUtil {
 
 	/**
 	 * 将循环体中 属性名称为<code>propertyName</code> 值包含在<code>propertyValues</code>的对象筛选出来
-	 *
+	 * 
 	 * @param <I>            循环体中对象的类型
 	 * @param <V>            属性值类型
 	 * @param beanIterable   循环体
@@ -337,7 +346,7 @@ public abstract class LoopUtil {
 
 	/**
 	 * 将循环体中 属性名称为<code>propertyName</code> 值包含在<code>propertyValues</code>的对象筛选出来
-	 *
+	 * 
 	 * @param <I>               循环体中对象的类型
 	 * @param <V>               属性值类型
 	 * @param beanIterable      循环体
@@ -346,7 +355,7 @@ public abstract class LoopUtil {
 	 * @return 筛选的结果列表
 	 */
 	public static <I, V> List<I> select(Iterable<I> beanIterable, String propertyName,
-										Collection<V> propertyValueList) {
+			Collection<V> propertyValueList) {
 		return select(beanIterable, BeanPredicateUtil.<I, V>containsPredicate(propertyName, propertyValueList));
 	}
 
@@ -355,21 +364,21 @@ public abstract class LoopUtil {
 	 * <p>
 	 * <b>场景:</b> 查找大于 10的元素
 	 * </p>
-	 *
+	 * 
 	 * <pre class="code">
 	 * Comparator{@code <Integer>} comparator = ComparatorUtils.naturalComparator();
 	 * Predicate{@code <Integer>} predicate = new ComparatorPredicate{@code <Integer>}(10, comparator, Criterion.LESS);
-	 *
+	 * 
 	 * List{@code <Integer>} select = LoopUtil.select(ConvertUtil.toList(1, 5, 10, 30, 55, 88, 1, 12, 3), predicate);
 	 * LOGGER.debug(JsonUtil.format(select, 0, 0));
 	 * </pre>
-	 *
+	 * 
 	 * <b>返回:</b>
-	 *
+	 * 
 	 * <pre class="code">
 	 * [30,55,88,12]
 	 * </pre>
-	 *
+	 * 
 	 * @param <I>          循环体中对象的类型
 	 * @param beanIterable 循环体
 	 * @param predicate    预言
@@ -382,7 +391,7 @@ public abstract class LoopUtil {
 	/**
 	 * 将循环体中 属性名为<code>propertyName</code> 对应的值<span style="color:red">都不在</span>
 	 * <code>propertyValues</code>列表中的对象筛选出来
-	 *
+	 * 
 	 * @param <I>            循环体中对象的类型
 	 * @param <V>            属性值的对象类型
 	 * @param beanIterable   循环体
@@ -401,7 +410,7 @@ public abstract class LoopUtil {
 	/**
 	 * 将循环体中 属性名为<code>propertyName</code> 对应的值<span style="color:red">都不在</span>
 	 * <code>propertyValues</code>列表中的对象筛选出来
-	 *
+	 * 
 	 * @param <I>               循环体中对象的类型
 	 * @param <V>               属性值的对象类型
 	 * @param beanIterable      循环体
@@ -410,7 +419,7 @@ public abstract class LoopUtil {
 	 * @return 筛选的对象列表
 	 */
 	public static <I, V> List<I> selectRejected(Iterable<I> beanIterable, String propertyName,
-												Collection<V> propertyValueList) {
+			Collection<V> propertyValueList) {
 		if (beanIterable == null) {
 			return new LinkedList<I>();
 		}
@@ -422,18 +431,18 @@ public abstract class LoopUtil {
 	 * <p>
 	 * <b>场景:</b> 从list中查找不等于1的元素
 	 * </p>
-	 *
+	 * 
 	 * <pre class="code">
 	 * List{@code <Long>} list = ConvertUtil.toList(1L, 1L, 2L, 3L);
 	 * LoopUtil.selectRejected(list, new EqualPredicate{@code <Long>}(1L))
 	 * </pre>
-	 *
+	 * 
 	 * <b>返回:</b>
-	 *
+	 * 
 	 * <pre class="code">
 	 * 2L, 3L
 	 * </pre>
-	 *
+	 * 
 	 * @param <I>          循环体中对象的类型
 	 * @param <V>          属性值的对象类型
 	 * @param beanIterable 循环体
@@ -446,7 +455,7 @@ public abstract class LoopUtil {
 
 	/**
 	 * 将循环体中属性为<code>propertyName</code>的值作为key，相同值的对象组成list作为value，返回映射map
-	 *
+	 * 
 	 * @param <T>          map对应KEY的对象类型
 	 * @param <I>          循环体中的对象类型
 	 * @param beanIterable 循环体
@@ -462,7 +471,7 @@ public abstract class LoopUtil {
 	 * <p>
 	 * <b>场景:</b> 从user list中,提取user的姓名的姓为key,user组成list,返回map
 	 * </p>
-	 *
+	 * 
 	 * <pre class="code">
 	 * User mateng55 = new User("马腾", 55);
 	 * User machao28 = new User("马超", 28);
@@ -474,29 +483,29 @@ public abstract class LoopUtil {
 	 * User guanping32 = new User("关平", 32);
 	 * User guansuo31 = new User("关索", 31);
 	 * User guanxing20 = new User("关兴", 18);
-	 *
+	 * 
 	 * <span style=
-	 "color:green">//---------------------------------------------------------------</span>
+	"color:green">//---------------------------------------------------------------</span>
 	 * List{@code <User>} list = ConvertUtil.toList(mateng55, machao28, madai27, maxiu25, zhangfei28, liubei32, guanyu50, guanping32, guansuo31, guanxing20);
-	 *
+	 * 
 	 * <span style=
-	 "color:green">//---------------------------------------------------------------</span>
-	 *
+	"color:green">//---------------------------------------------------------------</span>
+	 * 
 	 * Map{@code <String, List<User>>} map = LoopUtil.group(list,new Transformer{@code <User, String>}(){
-	 *
+	 * 
 	 *     &#64;Override
 	 *     public String transform(User user){
 	 *         <span style="color:green">//提取名字 的姓</span>
 	 *         return user.getName().substring(0, 1);
 	 *     }
 	 * });
-	 *
+	 * 
 	 * LOGGER.debug(JsonUtil.format(map));
-	 *
+	 * 
 	 * </pre>
-	 *
+	 * 
 	 * <b>返回:</b>
-	 *
+	 * 
 	 * <pre class="code">
 	 *   {
 	 *       "马":[{
@@ -537,7 +546,7 @@ public abstract class LoopUtil {
 	 *       ]
 	 *   }
 	 * </pre>
-	 *
+	 * 
 	 * @param <T>            map对应KEY的对象类型
 	 * @param <I>            循环体中的对象类型
 	 * @param beanIterable   循环体
@@ -550,7 +559,7 @@ public abstract class LoopUtil {
 
 	/**
 	 * 将循环体中符合预言的对象属性为<code>propertyName</code>的值作为key，相同值的对象组成list作为value，返回映射map
-	 *
+	 * 
 	 * @param <T>          map对应KEY的对象类型
 	 * @param <I>          循环体中的对象类型
 	 * @param beanIterable 循环体
@@ -558,7 +567,7 @@ public abstract class LoopUtil {
 	 * @return 筛选的map映射
 	 */
 	public static <T, I> Map<T, List<I>> group(Iterable<I> beanIterable, final String propertyName,
-											   Predicate<I> includePredicate) {
+			Predicate<I> includePredicate) {
 		Validate.notBlank(propertyName, "propertyName can't be null/empty!");
 		return group(beanIterable, includePredicate, new Transformer<I, T>() {
 
@@ -571,7 +580,7 @@ public abstract class LoopUtil {
 
 	/**
 	 * 将循环体中符合预言的对象属性为<code>propertyName</code>的值作为通过<code>keyTransformer</code>转换为key，相同值的对象组成list作为value，返回映射map
-	 *
+	 * 
 	 * @param <T>              map对应KEY的对象类型
 	 * @param <I>              循环体中的对象类型
 	 * @param beanIterable
@@ -580,7 +589,7 @@ public abstract class LoopUtil {
 	 * @return 筛选的map映射
 	 */
 	public static <T, I> Map<T, List<I>> group(Iterable<I> beanIterable, Predicate<I> includePredicate,
-											   Transformer<I, T> keyTransformer) {
+			Transformer<I, T> keyTransformer) {
 		if (!Checker.beNotEmpty(beanIterable)) {
 			return emptyMap();
 		}

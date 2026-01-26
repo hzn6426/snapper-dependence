@@ -1,3 +1,19 @@
+/*
+ * Copyright (c) 2020-2025, zening (316279828@qq.com).
+ * <p>
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy of
+ * the License at
+ * <p>
+ * https://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
+ */
+
 package com.baomibing.security.filter;
 
 import cn.hutool.core.util.URLUtil;
@@ -261,6 +277,28 @@ public abstract class BaseFilter extends OncePerRequestFilter {
         return url;
     }
 
+    protected void verifyTenantAuthorization(String needRole, String userCacheAuths) {
+        if (Checker.beBlank(userCacheAuths)) {
+            throw new ServerRuntimeException(ExceptionEnum.NO_PRIVILEGE_EXCEPTION);
+        }
+
+//        String needRole = tenantRoleResourceService.getRolesByUrl(tenantId, url, method); //cacheService.get(matchedCacheKey);
+
+        //URL资源不需要权限
+        if (PermConstant.RESOURCE_NO_NEED_ROLE.equals(needRole)) {
+            return;
+        }
+        //表明此API没有分配给任何角色
+        if (Checker.beEmpty(needRole)) {
+            throw new ServerRuntimeException(ExceptionEnum.NO_PRIVILEGE_EXCEPTION);
+        }
+        Set<String> needRoles = Splitter.on(Strings.COMMA).splitToStream(needRole).collect(Collectors.toSet());
+        Set<String> userRoles = Splitter.on(Strings.COMMA).splitToStream(userCacheAuths).collect(Collectors.toSet());
+        boolean match = needRoles.stream().anyMatch(userRoles::contains);
+        if (!match) {
+            throw new ServerRuntimeException(ExceptionEnum.NO_PRIVILEGE_EXCEPTION);
+        }
+    }
 
     protected String findCacheKey(HttpServletRequest request) {
         String url = request.getRequestURI();

@@ -1,3 +1,19 @@
+/*
+ * Copyright (c) 2020-2025, zening (316279828@qq.com).
+ * <p>
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy of
+ * the License at
+ * <p>
+ * https://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
+ */
+
 package com.baomibing.authority.controller;
 
 import com.baomibing.authority.dto.GroupDto;
@@ -6,6 +22,7 @@ import com.baomibing.authority.dto.UserGroupDto;
 import com.baomibing.authority.service.SysGroupService;
 import com.baomibing.authority.service.SysUserGroupService;
 import com.baomibing.authority.service.SysUserService;
+import com.baomibing.authority.vo.CopyUserPermVo;
 import com.baomibing.authority.vo.GroupUserVo;
 import com.baomibing.cache.CacheService;
 import com.baomibing.core.common.Assert;
@@ -54,6 +71,12 @@ public class GroupController extends MBaseController<GroupDto> {
 			return userGroups.stream().filter(ug -> !group.equals(ug.getGroupId())).collect(Collectors.toList());
 		}
 		return userGroups;
+	}
+
+	@GetMapping("change")
+	public void change(@RequestParam("gid") String groupId) {
+		Assert.CheckArgument(groupId);
+//		userGroupService.changeUser2Group(currentUserId(), groupId);
 	}
 
 
@@ -108,8 +131,18 @@ public class GroupController extends MBaseController<GroupDto> {
 	@PostMapping("/moveUsers")
 	public void moveUsers(@RequestBody GroupUserVo groupUserVo) {
 		Assert.CheckArgument(groupUserVo.getUsers());
-		groupService.doMoveGroupUsers(groupUserVo.getGroupId(), groupUserVo.getToGroupId(), new HashSet<>(groupUserVo.getUsers()));
+		groupService.doMoveGroupUsers(groupUserVo.getGroupId(), groupUserVo.getToGroupId(), groupUserVo.isBeSyncUserPerm(), new HashSet<>(groupUserVo.getUsers()));
 	}
+
+    /**
+     * 复制成员权限
+     * @param copyUserPermVo
+     */
+    @ULog("复制用户权限")
+    @PostMapping("/copyUserPerm")
+    public void copyUserPerm(@RequestBody CopyUserPermVo copyUserPermVo) {
+        groupService.doCopyUserPerm(copyUserPermVo.getUserId(), copyUserPermVo.getGroupId(), copyUserPermVo.getToUserId());
+    }
 
 	/**
 	 * 删除成员

@@ -1,8 +1,17 @@
-/**
- * Copyright (c) 2018-2025, zening (316279828@qq.com).
+/*
+ * Copyright (c) 2020-2025, zening (316279828@qq.com).
  * <p>
- * Any unauthorised copying, selling, transferring, distributing, transmitting, renting,
- * or modifying of the Software is considered an infringement.
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy of
+ * the License at
+ * <p>
+ * https://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
  */
 package com.baomibing.web.interceptor;
 
@@ -26,6 +35,7 @@ import com.baomibing.web.common.MultiReadHttpServletResponse;
 import com.baomibing.web.common.WebHelper;
 import com.baomibing.web.enums.MethodNameLogRuleEnum;
 import com.baomibing.web.enums.UserLogTypeEnum;
+import com.baomibing.web.event.HmacUserLogEvent;
 import com.baomibing.web.event.TenantUserLogEvent;
 import com.baomibing.web.event.UserLogEvent;
 import com.google.common.base.Splitter;
@@ -62,33 +72,33 @@ import static com.baomibing.tool.constant.RedisKeyConstant.KEY_USER_GATE_WAY_ID;
  * @version 1.0.0
  */
 public class ContextHandlerInterceptor implements HandlerInterceptor {
-
-    @Autowired private CacheService cacheService;
+	
+	@Autowired private CacheService cacheService;
     @Autowired private ApplicationEventPublisher publisher;
     private static final ThreadLocal<UserLogEvent> localLog = new ThreadLocal<>();
 
     @Value("${spring.application.name}")
     private String serviceName;
-    @Value("${baomibing.ulog:true}")
-    private Boolean beLogger = true;
-
-    private static final List<String> whites = Lists.newArrayList(WebConstant.API_USER_LOG_URL, WebConstant.FAPI_USER_LOG_URL,
+    @Value("${snapper.ulog:true}")
+    private Boolean beLogger;
+    
+	private static final List<String> whites = Lists.newArrayList(WebConstant.API_USER_LOG_URL, WebConstant.FAPI_USER_LOG_URL,
             WebConstant.TENANT_API_USER_LOG_URL, WebConstant.TENANT_API_REGISTER_URL);
 
-    private static final AntPathMatcher pathMatch = new AntPathMatcher();
+  private static final AntPathMatcher pathMatch = new AntPathMatcher();
 
-    private boolean matchWhiteList(String url) {
-        return whites.stream().anyMatch(w -> pathMatch.match(w, url));
-    }
-
+  private boolean matchWhiteList(String url) {
+      return whites.stream().anyMatch(w -> pathMatch.match(w, url));
+  }
+    
     private final Set<String> names = EnumSet.allOf(MethodNameLogRuleEnum.class).stream().map(Enum::name).collect(Collectors.toSet());
-
+    
     //如果没有ULOG标记将忽略记录文档
     private boolean ignoreULog(HttpServletRequest request, Object handler) {
-        HandlerMethod handlerMethod = (HandlerMethod) handler;
-        Method method = handlerMethod.getMethod();
-        ULog ulog = method.getAnnotation(ULog.class);
-        return !Checker.beNull(ulog) && (!Checker.beNotNull(request.getContentType()) || request.getContentType().toUpperCase().contains("APPLICATION/JSON"));
+    	 HandlerMethod handlerMethod = (HandlerMethod) handler;
+         Method method = handlerMethod.getMethod();
+         ULog ulog = method.getAnnotation(ULog.class);
+         return !Checker.beNull(ulog) && (!Checker.beNotNull(request.getContentType()) || request.getContentType().toUpperCase().contains("APPLICATION/JSON"));
     }
 
     @Override
@@ -98,10 +108,11 @@ public class ContextHandlerInterceptor implements HandlerInterceptor {
         }
         String url = request.getRequestURI();
         if (url.contains(WebConstant.SUFFIX_HTML) || matchWhiteList(url)) {
-            return true;
+        	return true;
         }
 
-        if (beLogger && ignoreULog(request, handler)) {
+
+        if (Boolean.TRUE.equals(beLogger) && ignoreULog(request, handler)) {
             beforeExecuteLog(request, handler);
         }
 
@@ -113,7 +124,7 @@ public class ContextHandlerInterceptor implements HandlerInterceptor {
     @Override
     public void afterCompletion(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull Object handler, Exception ex)  {
         try {
-            if (beLogger && ignoreULog(request, handler)) {
+            if (Boolean.TRUE.equals(beLogger) && ignoreULog(request, handler)) {
                 afterExecuteLog(request, response, ex);
             }
         } finally {
@@ -121,7 +132,7 @@ public class ContextHandlerInterceptor implements HandlerInterceptor {
         }
 
     }
-
+    
     private void buildContext(HttpServletRequest req) {
         String userName = req.getHeader(UserHeaderConstant.USER_NAME);
         //构建RequestContext
@@ -130,8 +141,18 @@ public class ContextHandlerInterceptor implements HandlerInterceptor {
                 .setFullUrl(req.getHeader(UserHeaderConstant.USER_URL)).setUrl(req.getRequestURI())
                 .setLanguage(req.getHeader(UserHeaderConstant.LANG));;
         RequestContext.putRequest(ur);
+
+        String flag = req.getHeader(UserHeaderConstant.USER_FLAG);
+        String tenantId = req.getHeader(UserHeaderConstant.USER_TENANT_ID);
         //构建UserContext
-        User user = new User();
+        User user;
+        if (Checker.beNotEmpty(flag) && Strings.TENANT.equalsIgnoreCase(flag)) {
+            user = new TenantUser();
+            ((TenantUser)user).setTenantId(tenantId);
+        } else {
+            user = new User();
+        }
+//        User user = new User();
         String decodeCnName = URLDecoder.decode(URLDecoder.decode(req.getHeader(UserHeaderConstant.USER_CN_NAME), StandardCharsets.UTF_8), StandardCharsets.UTF_8);
         String outerSystemName = Checker.beEmpty(req.getHeader(UserHeaderConstant.USER_OUTER_SYSTEM)) ? ""
                 : URLDecoder.decode(URLDecoder.decode(req.getHeader(UserHeaderConstant.USER_OUTER_SYSTEM), StandardCharsets.UTF_8), StandardCharsets.UTF_8);
@@ -153,7 +174,8 @@ public class ContextHandlerInterceptor implements HandlerInterceptor {
                 .setHmacGroupId(req.getHeader(UserHeaderConstant.HMAC_USER_GROUP))
                 .setHmacUserCnName(URLDecoder.decode(URLDecoder.decode(req.getHeader(UserHeaderConstant.HMAC_USER_CN_NAME), StandardCharsets.UTF_8), StandardCharsets.UTF_8))
                 .setHmacUserName(req.getHeader(UserHeaderConstant.HMAC_USER_NAME))
-                .setHmacGroupName(URLDecoder.decode(URLDecoder.decode(req.getHeader(UserHeaderConstant.HMAC_USER_GROUP_NAME), StandardCharsets.UTF_8), StandardCharsets.UTF_8));
+                .setHmacGroupName(URLDecoder.decode(URLDecoder.decode(req.getHeader(UserHeaderConstant.HMAC_USER_GROUP_NAME), StandardCharsets.UTF_8), StandardCharsets.UTF_8))
+                .setHmacBusinessId(req.getHeader(UserHeaderConstant.HMAC_USER_BUSINESS_ID));
 
         if (Checker.beNotEmpty(req.getHeader(UserHeaderConstant.USER_ROLES))) {
             user.setRoles(Sets.newHashSet(Splitter.on(Strings.COMMA).splitToList(req.getHeader(UserHeaderConstant.USER_ROLES))));
@@ -177,13 +199,13 @@ public class ContextHandlerInterceptor implements HandlerInterceptor {
             DataSourceContext.putDataSources(new DataSource().setName(ds));
         }
     }
-
+    
     private UserAgent parseUserAgent(String userAgent) {
         return UserAgent.parseUserAgentString(userAgent);
-
+    	
     }
-
-    //记录日志前置处理
+    
+  //记录日志前置处理
     private  void beforeExecuteLog(HttpServletRequest request, Object handler) {
         String url = request.getRequestURI();
         Date time = new Date();
@@ -197,14 +219,18 @@ public class ContextHandlerInterceptor implements HandlerInterceptor {
         if (Checker.beNotEmpty(systemTag) && systemTag.contains(Strings.HASH)) {
             systemTag = systemTag.split(Strings.HASH)[0];
         }
-        if (url.startsWith(WebConstant.HMAC_API_LOG_URL) || url.contains(WebConstant.HMAC_API_LOG_URL)) {
+        boolean beHamcRequest = url.startsWith(WebConstant.HMAC_API_LOG_URL) || url.contains(WebConstant.HMAC_API_LOG_URL);
+        if (beHamcRequest) {
             uname = request.getHeader(UserHeaderConstant.HMAC_USER_NAME);
             cnName = URLUtil.decode(URLUtil.decode(request.getHeader(UserHeaderConstant.HMAC_USER_CN_NAME)));
             uname = uname + "(" + URLUtil.decode(URLUtil.decode(request.getHeader(UserHeaderConstant.USER_OUTER_SYSTEM))) + ")";
         }
         //创建Log
         UserLogEvent userLogEvent = new UserLogEvent(serviceName);
-        if (Checker.beNotEmpty(flag) && Strings.TENANT.equalsIgnoreCase(flag)) {
+        if (beHamcRequest) {
+            userLogEvent = new HmacUserLogEvent(serviceName);
+            ((HmacUserLogEvent)userLogEvent).setBindType(flag).setTenantId(tenantId).setTenantName(URLUtil.decode(URLUtil.decode(request.getHeader(UserHeaderConstant.USER_TENANT_NAME))));
+        } else if (Checker.beNotEmpty(flag) && Strings.TENANT.equalsIgnoreCase(flag)) {
             userLogEvent = new TenantUserLogEvent(serviceName);
             ((TenantUserLogEvent)userLogEvent).setTenantId(tenantId);
         }
@@ -220,7 +246,7 @@ public class ContextHandlerInterceptor implements HandlerInterceptor {
 
         userLogEvent.setExecuteMethod(controllerName + Strings.DOT + method.getName()).setLogTypeCode(logType);
 
-        if (request.getRequestURI().startsWith(WebConstant.HMAC_API_LOG_URL)) {
+        if (beHamcRequest) {
             userLogEvent.setBeHmacRequest(Boolean.TRUE)
                     .setOuterSystem(URLUtil.decode(URLUtil.decode(request.getHeader(UserHeaderConstant.USER_OUTER_SYSTEM))));
         }
@@ -308,10 +334,10 @@ public class ContextHandlerInterceptor implements HandlerInterceptor {
 
         }
     }
-
+    
     private void cleanContext() {
-        UserContext.remove();
-        RequestContext.remove();
+    	UserContext.remove();
+    	RequestContext.remove();
         EmailContext.remove();
         DataSourceContext.remove();
     }

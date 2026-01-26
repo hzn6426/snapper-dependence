@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright (c) 2020-2025, zening (316279828@qq.com).
+  ~ <p>
+  ~ Licensed under the Apache License, Version 2.0 (the "License"); you may not
+  ~ use this file except in compliance with the License. You may obtain a copy of
+  ~ the License at
+  ~ <p>
+  ~ https://www.apache.org/licenses/LICENSE-2.0
+  ~ <p>
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+  ~ WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+  ~ License for the specific language governing permissions and limitations under
+  ~ the License.
+  -->
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.baomibing.authority.mapper.SysTenantUserUsetMapper">
+
+    
+    <!-- 根据角色ID获取与组织关联的用户ID信息 -->
+    <select id="listGroupUsersByUset" parameterType="java.lang.String" resultType="com.baomibing.authority.entity.SysTenantUser">
+        SELECT u.id,  u.user_no,u.user_real_en_name, CONCAT(GROUP_CONCAT(ur.org_id)) group_id
+        FROM sys_tenant_user_uset AS ur
+        INNER JOIN sys_tenant_user u ON u.id = ur.user_id
+        WHERE ur.uset_id =  #{usetId} and ur.tenant_id = #{tenantId}
+        GROUP BY u.id, u.user_no,u.user_real_en_name
+    </select>
+    
+    <!-- 根据组织和用户列出用户组列表 -->
+    <select id="listUsetsByGroupAndUser" parameterType="java.lang.String" resultType="com.baomibing.authority.entity.SysTenantUset">
+        SELECT  u.id, u.uset_name from sys_tenant_uset u INNER JOIN sys_tenant_user_uset uu ON u.id = uu.uset_id
+        WHERE uu.user_id =  #{userId,jdbcType=CHAR} AND uu.org_id = #{orgId,jdbcType=CHAR} and uu.tenant_id = #{tenantId}
+    </select>
+</mapper>

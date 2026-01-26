@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright (c) 2020-2025, zening (316279828@qq.com).
+  ~ <p>
+  ~ Licensed under the Apache License, Version 2.0 (the "License"); you may not
+  ~ use this file except in compliance with the License. You may obtain a copy of
+  ~ the License at
+  ~ <p>
+  ~ https://www.apache.org/licenses/LICENSE-2.0
+  ~ <p>
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+  ~ WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+  ~ License for the specific language governing permissions and limitations under
+  ~ the License.
+  -->
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.baomibing.authority.mapper.SysTenantUserPositionMapper">
+
+	<!-- 根据用户ID，组织ID获取用户组织职位对应的角色列表 -->
+	<select id="listPositionRoleIdsByUserAndGroup" resultType="java.lang.String">
+		SELECT spr.role_id
+		FROM sys_tenant_position sp
+		INNER JOIN sys_tenant_user_position sup ON sp.id = sup.position_id  AND sp.org_id = sup.group_id
+		INNER JOIN sys_tenant_position_role spr ON spr.position_id = sp.id
+		WHERE sup.user_id = #{userId, jdbcType=CHAR} AND sp.org_id = #{groupId, jdbcType=CHAR} and sp.tenant_id = #{tenantId, jdbcType=CHAR}
+	</select>
+	
+	
+	<!-- 根据用户ID，组织ID获取用户组织对应的职位 -->
+	<select id="listPositionByUserAndGroup" resultType="com.baomibing.authority.entity.SysTenantPosition">
+		SELECT sp.id, sp.post_name, sp.perm_scope
+		FROM sys_tenant_position sp
+		LEFT JOIN sys_tenant_user_position sup ON sp.id = sup.position_id AND sp.org_id = sup.group_id
+		WHERE sup.user_id = #{userId, jdbcType=CHAR} AND sp.org_id = #{groupId, jdbcType=CHAR} and sp.tenant_id = #{tenantId, jdbcType=CHAR}
+	</select>
+</mapper>

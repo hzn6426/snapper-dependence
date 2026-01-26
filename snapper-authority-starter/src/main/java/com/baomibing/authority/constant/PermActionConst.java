@@ -1,8 +1,17 @@
-/**
- * Copyright (c) 2018-2025, zening (316279828@qq.com).
+/*
+ * Copyright (c) 2020-2025, zening (316279828@qq.com).
  * <p>
- * Any unauthorised copying, selling, transferring, distributing, transmitting, renting,
- * or modifying of the Software is considered an infringement.
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy of
+ * the License at
+ * <p>
+ * https://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
  */
 package com.baomibing.authority.constant;
 
@@ -43,5 +52,4 @@ public abstract class PermActionConst {
     public static final String GROUP_TREE_ALL_GROUPS_AND_POSITIONS = "GROUP_TREEALLGROUPSANDPOSITIONS";
     //组织获取所有组织和用户
     public static final String GROUP_TREE_ALL_GROUPS_AND_USERS = "GROUP_TREEALLGROUPSANDUSERS";
-
 }

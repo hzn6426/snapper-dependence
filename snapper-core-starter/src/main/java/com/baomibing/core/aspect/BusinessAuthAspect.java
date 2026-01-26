@@ -1,31 +1,47 @@
-/**
- * Copyright (c) 2018-2025, zening (316279828@qq.com).
+/*
+ * Copyright (c) 2020-2025, zening (316279828@qq.com).
  * <p>
- * Any unauthorised copying, selling, transferring, distributing, transmitting, renting,
- * or modifying of the Software is considered an infringement.
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy of
+ * the License at
+ * <p>
+ * https://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
  */
 package com.baomibing.core.aspect;
 
 
+import com.alibaba.fastjson.JSONObject;
+import com.baomibing.cache.CacheService;
 import com.baomibing.core.annotation.Action;
+import com.baomibing.core.base.ActionScope;
 import com.baomibing.core.context.BusinessAuthContext;
 import com.baomibing.core.context.PermContext;
 import com.baomibing.core.spi.BusinessAuthService;
 import com.baomibing.core.wrap.EntrustWarpper;
 import com.baomibing.tool.constant.Strings;
+import com.baomibing.tool.perm.ActionAnnotation;
 import com.baomibing.tool.user.RequestContext;
 import com.baomibing.tool.user.User;
 import com.baomibing.tool.util.Checker;
+import com.baomibing.tool.util.ClassUtil;
 import com.baomibing.tool.util.SpiUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.annotation.Order;
 
 import java.util.List;
 
+import static com.baomibing.tool.constant.RedisKeyConstant.KEY_ACTION_CONNECT_PREFIX;
 import static com.baomibing.tool.user.UserContext.currentSystemTag;
 import static com.baomibing.tool.user.UserContext.currentUser;
 
@@ -41,6 +57,8 @@ import static com.baomibing.tool.user.UserContext.currentUser;
 @Slf4j
 public class BusinessAuthAspect {
 
+	@Autowired  private CacheService cacheService;
+
 	public BusinessAuthAspect() {
 		List<BusinessAuthService> providers = SpiUtil.load(BusinessAuthService.class);
 		if (Checker.beNotEmpty(providers)) {
@@ -52,15 +70,26 @@ public class BusinessAuthAspect {
 	@Around("@annotation(com.baomibing.core.annotation.Action)")
 	public Object roundBusinessAuth(ProceedingJoinPoint point) throws Throwable {
 		Action ba = ((MethodSignature) point.getSignature()).getMethod().getAnnotation(Action.class);
+		ActionAnnotation aa = new ActionAnnotation();
+		aa.setActionValue(ba.value())
+			.setActionIgnoreUserScope(ba.ignoreUserScope())
+			.setActionIgnoreGroupScope(ba.ignoreGroupScope())
+			.setActionIgnoreCompanyScopeTags(Checker.beNotEmpty(ba.ignoreCompanyScopeTags()) ? String.join(Strings.COMMA,ba.ignoreCompanyScopeTags()): null)
+			.setActionOnlyFilterCompanyTags(Checker.beNotEmpty(ba.onlyFilterCompanyTags()) ? String.join(Strings.COMMA,ba.onlyFilterCompanyTags()): null);
+		String caches = cacheService.get(KEY_ACTION_CONNECT_PREFIX + ba.value());
+		if (Checker.beNotEmpty(caches)) {
+			aa = JSONObject.parseObject(caches, ActionAnnotation.class);
+		}
+
 		User currentUser = currentUser().orElse(null);
-		String bae = Checker.beNull(ba) ? null : ba.value();
+		String bae = aa.getActionValue();
 		String methodName = point.getSignature().getName();
 		String className =  ((MethodSignature)point.getSignature()).getMethod().getDeclaringClass().getName();
 		String key = className + Strings.DOT + methodName;
 		try {
 			//如果忽略当前Action直接跳过
 			if (!PermContext.hasIgnore(bae)) {
-				buildContext(key, currentUser, ba);
+				buildContext(key, currentUser, aa);
 			}
 			return point.proceed();
 		} finally {
@@ -88,20 +117,26 @@ public class BusinessAuthAspect {
 		return false;
 	}
 	
-	public void buildContext(String key, User currentUser, Action ba) {
+	public void buildContext(String key, User currentUser, ActionAnnotation ba) {
 
 		//模块不需要权限直接跳过
 		if (Checker.beNull(authService)) return;
 
-		if (Checker.beNull(currentUser)) return;
+		if (Checker.beNull(currentUser) || ClassUtil.beNotClassOnly(User.class, currentUser)) return;
 
-		String[] companyUserTags = ba.onlyFilterCompanyTags();
-		String[] ignoreCompanyUserTags = ba.ignoreCompanyScopeTags();
-		String scope = ba.defaultScope().name();
-		boolean beIgnoreUserScope = ba.ignoreUserScope();
-		boolean beIgnoreGroupScope = ba.ignoreGroupScope();
+//		String[] companyUserTags = ba.onlyFilterCompanyTags();
+		String[] companyUserTags = Checker.beNotEmpty(ba.getActionOnlyFilterCompanyTags())  ? ba.getActionOnlyFilterCompanyTags().split(Strings.COMMA) : new String[0];
+//		String[] ignoreCompanyUserTags = ba.ignoreCompanyScopeTags();
+		String[] ignoreCompanyUserTags = Checker.beNotEmpty(ba.getActionIgnoreCompanyScopeTags()) ? ba.getActionIgnoreCompanyScopeTags().split(Strings.COMMA) : new String[0];
+//		String scope = ba.defaultScope().name();
+		String scope = ActionScope.CURRENT_COMPANY.name();
+//		boolean beIgnoreUserScope = ba.ignoreUserScope();
+//		boolean beIgnoreGroupScope = ba.ignoreGroupScope();
+		boolean beIgnoreUserScope = ba.getActionIgnoreUserScope();
+		boolean beIgnoreGroupScope = ba.getActionIgnoreGroupScope();
 		String userTag = currentUser.getUserTag();
-		String bae = ba.value();
+//		String bae = ba.value();
+		String bae = ba.getActionValue();
 
 		String permId;
 		if (Checker.beNull(bae)) {
@@ -111,7 +146,7 @@ public class BusinessAuthAspect {
 		}
 		EntrustWarpper ew = authService.getEntrustBusinessPerm(currentUser, permId, scope, beIgnoreUserScope, beIgnoreGroupScope);
 		ew.setBeOnlyFilterCompany((beIgnoreGroupScope && beIgnoreUserScope) || parseTag(companyUserTags, userTag)).setBeLoginWithAuthCode(Strings.TEMP.equals(currentSystemTag()))
-				.setBeIgnoreCompanyScope(parseTag(ignoreCompanyUserTags, userTag));
+				.setBeIgnoreCompanyScope(parseTag(ignoreCompanyUserTags, userTag)).setAction(ba.getActionValue());
 		BusinessAuthContext.set(key, ew);
 	}
 	

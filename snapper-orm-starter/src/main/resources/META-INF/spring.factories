@@ -1,3 +1,4 @@
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-  com.baomibing.orm.config.AopConfiguration,\
-com.baomibing.orm.config.MybatisConfiguration
+com.baomibing.orm.config.AopConfiguration,\
+com.baomibing.orm.config.MybatisConfiguration,\
+com.baomibing.orm.config.OrmPlusConfiguration

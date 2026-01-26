@@ -1,4 +1,20 @@
 
+/*
+ * Copyright (c) 2020-2025, zening (316279828@qq.com).
+ * <p>
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy of
+ * the License at
+ * <p>
+ * https://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
+ */
+
 package com.baomibing.tool.constant;
 
 public abstract class TenantRedisKeyConstant {
@@ -9,89 +25,89 @@ public abstract class TenantRedisKeyConstant {
 
 
     //前缀
-    private static final String ODM_PREFIX = "ODM_TENANT_";
+    private static final String SNAPPER_PREFIX = "SNAPPER_TENANT_";
 
 
     //=======================================================================//
     //                      Limit Module Redis Key                          //
     //=======================================================================//
-    public static final String KEY_RATE_LIMIT = ODM_PREFIX + "key_rate_limit";
+    public static final String KEY_RATE_LIMIT = SNAPPER_PREFIX + "key_rate_limit";
     //=======================================================================//
     //                      Button Module Redis Key                          //
     //=======================================================================//
     //API key前缀
-    public static final String CACHE_API_PREFIX = ODM_PREFIX + "auth_api_";
+    public static final String CACHE_API_PREFIX = SNAPPER_PREFIX + "auth_api_";
     //按钮权限全追
-    public static final String KEY_BUTTON_PERM_CONTEXT = ODM_PREFIX + "key_button_perm_context";
+    public static final String KEY_BUTTON_PERM_CONTEXT = SNAPPER_PREFIX + "key_button_perm_context";
 
     //=======================================================================//
     //                     User Context Redis Key                            //
     //=======================================================================//
 
     //非单点登录时存储用户的TOKEN
-    public static final String KEY_USER_TOKEN = ODM_PREFIX + "key_u_token_{0}";
+    public static final String KEY_USER_TOKEN = SNAPPER_PREFIX + "key_u_token_{0}";
 
     //用户上下文（以HASH形式存储）
-    public static final String KEY_USER_CONTEXT = ODM_PREFIX + "key_u_context_{0}";
+    public static final String KEY_USER_CONTEXT = SNAPPER_PREFIX + "key_u_context_{0}";
     //用户名
-    public static final String KEY_USER_NO = ODM_PREFIX + "key_u_no";
+    public static final String KEY_USER_NO = SNAPPER_PREFIX + "key_u_no";
     //用户ID
-    public static final String KEY_USER_ID = ODM_PREFIX + "key_u_id";
+    public static final String KEY_USER_ID = SNAPPER_PREFIX + "key_u_id";
     //用户组织ID
-    public static final String KEY_USER_GROUP_ID = ODM_PREFIX + "key_u_group_id";
+    public static final String KEY_USER_GROUP_ID = SNAPPER_PREFIX + "key_u_group_id";
     //用户职位ID列表
-    public static final String KEY_USER_POSITION_ID = ODM_PREFIX + "key_u_position_id";
+    public static final String KEY_USER_POSITION_ID = SNAPPER_PREFIX + "key_u_position_id";
     //RSA public key
-    public static final String KEY_USER_SECURITY_RSA_PK = ODM_PREFIX + "key_u_rsa_pk:{0}";
+    public static final String KEY_USER_SECURITY_RSA_PK = SNAPPER_PREFIX + "key_u_rsa_pk:{0}";
     //用户当前部门角色对应的权限authority
-    public static final String KEY_USER_SECURITY_AUTHORITY = ODM_PREFIX + "key_u_authority";
+    public static final String KEY_USER_SECURITY_AUTHORITY = SNAPPER_PREFIX + "key_u_authority";
     //用户角色ID
-    public static final String KEY_USER_ROLE_ID = ODM_PREFIX + "key_u_role_id";
+    public static final String KEY_USER_ROLE_ID = SNAPPER_PREFIX + "key_u_role_id";
     //用户当前部门
-    public static final String KEY_USER_DEPARTMENT = ODM_PREFIX + "key_u_department";
+    public static final String KEY_USER_DEPARTMENT = SNAPPER_PREFIX + "key_u_department";
     //用户当前公司
-    public static final String KEY_USER_COMPANY = ODM_PREFIX + "key_u_company";
+    public static final String KEY_USER_COMPANY = SNAPPER_PREFIX + "key_u_company";
     //用户当前邮箱信息
-    public static final String KEY_USER_EMAIL = ODM_PREFIX + "key_u_email";
+    public static final String KEY_USER_EMAIL = SNAPPER_PREFIX + "key_u_email";
     //用户中文名
-    public static final String KEY_USER_REAL_CN_NAME = ODM_PREFIX + "key_u_cn_name";
+    public static final String KEY_USER_REAL_CN_NAME = SNAPPER_PREFIX + "key_u_cn_name";
     //用户英文名
-    public static final String KEY_USER_REAL_EN_NAME = ODM_PREFIX + "key_u_en_name";
+    public static final String KEY_USER_REAL_EN_NAME = SNAPPER_PREFIX + "key_u_en_name";
     //字典id
-    public static final String KEY_DICT_CODE = ODM_PREFIX + "key_dict_code_";
+    public static final String KEY_DICT_CODE = SNAPPER_PREFIX + "key_dict_code_";
     //字典项id
-    public static final String KEY_DICT_CHILD_CODE = ODM_PREFIX + "key_dict_child_code_";
+    public static final String KEY_DICT_CHILD_CODE = SNAPPER_PREFIX + "key_dict_child_code_";
     //参数id
-    public static final String KEY_PARAM_ID = ODM_PREFIX + "key_param_id_";
+    public static final String KEY_PARAM_ID = SNAPPER_PREFIX + "key_param_id_";
 
-    public static final String KEY_USER_TAG = ODM_PREFIX + "key_u_tag";
+    public static final String KEY_USER_TAG = SNAPPER_PREFIX + "key_u_tag";
 
-    public static final String KEY_USER_RANK = ODM_PREFIX + "key_u_rank";
+    public static final String KEY_USER_RANK = SNAPPER_PREFIX + "key_u_rank";
 
-    public static final String KEY_USER_SCORE = ODM_PREFIX + "key_u_score";
+    public static final String KEY_USER_SCORE = SNAPPER_PREFIX + "key_u_score";
 
-    public static final String KEY_USER_STATE = ODM_PREFIX + "key_u_state";
+    public static final String KEY_USER_STATE = SNAPPER_PREFIX + "key_u_state";
 
-    public static final String KEY_USER_COMPANY_NAME = ODM_PREFIX + "key_u_company_name";
+    public static final String KEY_USER_COMPANY_NAME = SNAPPER_PREFIX + "key_u_company_name";
 
-    public static final String KEY_USER_EXPIRE_TIME = ODM_PREFIX + "key_u_expire_time";
+    public static final String KEY_USER_EXPIRE_TIME = SNAPPER_PREFIX + "key_u_expire_time";
 
-    public static final String KEY_PREFIX_HMAC_USER = ODM_PREFIX + "_HMAC_USER:{0}";
+    public static final String KEY_PREFIX_HMAC_USER = SNAPPER_PREFIX + "_HMAC_USER:{0}";
 
-    public static final String CACHE_HMAC_USER_PREFIX = ODM_PREFIX + "_HMAC_USER:";
+    public static final String CACHE_HMAC_USER_PREFIX = SNAPPER_PREFIX + "_HMAC_USER:";
 
 //    public static final String CACHE_API_PREFIX_USER = CACHE_API_PREFIX + "USER_{0}";
 
-    public static final String KEY_HMAC_USER_CONTEXT = ODM_PREFIX + "key_hmac_user_context";
+    public static final String KEY_HMAC_USER_CONTEXT = SNAPPER_PREFIX + "key_hmac_user_context";
 
-    public static final String KEY_TENANT_CHARGE_LOCK = ODM_PREFIX + "key_tenant_charge_lock_{0}";
+    public static final String KEY_TENANT_CHARGE_LOCK = SNAPPER_PREFIX + "key_tenant_charge_lock_{0}";
 
 
 
     //=======================================================================//
     //                      Menu Module Redis Key                            //
     //=======================================================================//
-    public static final String KEY_USER_MENU = ODM_PREFIX + "key_u_menu_{0}";
+    public static final String KEY_USER_MENU = SNAPPER_PREFIX + "key_u_menu_{0}";
 
     //redis过期时间
     public static final Long REDIS_TIME_IN_SECONDS = 1800L;
@@ -100,21 +116,21 @@ public abstract class TenantRedisKeyConstant {
     //=======================================================================//
     //                      GROUP Module Redis Key                            //
     //=======================================================================//
-    public static final String GROUP_PREFIX = ODM_PREFIX + "GROUP_";
-    public static final String TENANT_GROUP_PREFIX = ODM_PREFIX + "TENANT_GROUP_";
+    public static final String GROUP_PREFIX = SNAPPER_PREFIX + "GROUP_";
+    public static final String TENANT_GROUP_PREFIX = SNAPPER_PREFIX + "TENANT_GROUP_";
 
     //缓存登录用户选择的组织ID
-    public static final String CACHE_USER_LOGIN_ORG_KEY =  ODM_PREFIX + "_cache_user_login_org_key_{0}";
+    public static final String CACHE_USER_LOGIN_ORG_KEY =  SNAPPER_PREFIX + "_cache_user_login_org_key_{0}";
 
     //=======================================================================//
     //                      Action ActionConnect Redis Key                   //
     //=======================================================================//
-    public static final String CACHE_ACTION_CONNECT_PREFIX = ODM_PREFIX + "action_connect_prefix_";
+    public static final String CACHE_ACTION_CONNECT_PREFIX = SNAPPER_PREFIX + "action_connect_prefix_";
 
     //存储 action 的缓存key
-    public static final String CACHE_ACTION_CONNECT_KEY_PREFIX = ODM_PREFIX + "action_connect_key_prefix_";
+    public static final String CACHE_ACTION_CONNECT_KEY_PREFIX = SNAPPER_PREFIX + "action_connect_key_prefix_";
 
-    public static final String CACHE_TABLE_COLUMN_PREFIX =  ODM_PREFIX + "cache_table_column_prefix";//CACHE_TABLE_COLUMN_PREFIX_";
+    public static final String CACHE_TABLE_COLUMN_PREFIX =  SNAPPER_PREFIX + "cache_table_column_prefix";//CACHE_TABLE_COLUMN_PREFIX_";
 
 
 

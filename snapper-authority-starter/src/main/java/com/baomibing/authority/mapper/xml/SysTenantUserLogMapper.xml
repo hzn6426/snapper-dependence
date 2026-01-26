@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright (c) 2020-2025, zening (316279828@qq.com).
+  ~ <p>
+  ~ Licensed under the Apache License, Version 2.0 (the "License"); you may not
+  ~ use this file except in compliance with the License. You may obtain a copy of
+  ~ the License at
+  ~ <p>
+  ~ https://www.apache.org/licenses/LICENSE-2.0
+  ~ <p>
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+  ~ WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+  ~ License for the specific language governing permissions and limitations under
+  ~ the License.
+  -->
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.baomibing.authority.mapper.SysTenantUserLogMapper">
+
+    <sql id="search_where_sql">
+        <where>
+            <if test="createUserCnName != null and  createUserCnName != ''">
+                AND create_user_cn_name LIKE CONCAT('%',#{createUserCnName},'%')
+            </if>
+            <if test="exchangeName != null and  exchangeName != ''">
+                AND exchange_name LIKE CONCAT('%',#{exchangeName},'%')
+            </if>
+            <if test="state != null and  state != ''">
+                AND state = #{state}
+            </if>
+            <if test="startTime != null">
+                AND DATE_FORMAT(exchange_time,'%Y-%m-%d %H:%i:%s') &gt;= DATE_FORMAT(#{startTime},'%Y-%m-%d %H:%i:%s')
+            </if>
+            <if test="endTime != null">
+                AND DATE_FORMAT(exchange_time,'%Y-%m-%d %H:%i:%s') &lt;= DATE_FORMAT(#{endTime},'%Y-%m-%d %H:%i:%s')
+            </if>
+        </where>
+    </sql>
+    <!-- 根据条件分页查询按钮及API信息 -->
+    <select id="listLogs" resultType="com.baomibing.authority.entity.SysTenantUserLog">
+        SELECT id,exchange_url ,exchange_method,exchange_name,exchange_time,exception_msg,state,ip_address,create_user_cn_name,
+        execute_timer,execute_module_name,log_type_code,browser,os,execute_method,system_tag
+        FROM sys_tenant_user_log
+        <include refid="search_where_sql"></include>
+        ORDER BY create_time DESC
+        LIMIT #{offset}, #{pageSize}
+    </select>
+
+    <!-- 根据条件分页查询按钮及API信息的总条数 -->
+    <select id="countLog" resultType="java.lang.Integer">
+        SELECT COUNT(1)
+        FROM sys_tenant_user_log
+        <include refid="search_where_sql"></include>
+    </select>
+</mapper>

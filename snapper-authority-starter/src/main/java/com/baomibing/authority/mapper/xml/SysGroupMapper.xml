@@ -1,4 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright (c) 2020-2025, zening (316279828@qq.com).
+  ~ <p>
+  ~ Licensed under the Apache License, Version 2.0 (the "License"); you may not
+  ~ use this file except in compliance with the License. You may obtain a copy of
+  ~ the License at
+  ~ <p>
+  ~ https://www.apache.org/licenses/LICENSE-2.0
+  ~ <p>
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+  ~ WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+  ~ License for the specific language governing permissions and limitations under
+  ~ the License.
+  -->
+
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.baomibing.authority.mapper.SysGroupMapper">
 
@@ -66,4 +82,11 @@
 		LEFT JOIN sys_group g ON cg.parent_id LIKE CONCAT(g.id, '%') AND g.group_level = 1 
 		WHERE cg.id = #{id, jdbcType=CHAR}
 	</select>
+
+    <select id="listAllGroup" resultType="com.baomibing.authority.entity.SysGroup">
+        SELECT id,group_name,glft,grht,parent_id,group_level,group_id,be_deleted,priority,create_time,update_time,create_user,update_user,create_user_cn_name,update_user_cn_name
+        FROM sys_group AS g
+        WHERE (parent_id IS NOT NULL)
+        ORDER BY ifnull(priority,999), group_level ASC
+    </select>
 </mapper>

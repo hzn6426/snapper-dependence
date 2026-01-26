@@ -1,9 +1,24 @@
 
+/*
+ * Copyright (c) 2020-2025, zening (316279828@qq.com).
+ * <p>
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy of
+ * the License at
+ * <p>
+ * https://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
+ */
+
 package com.baomibing.authority.service.impl;
 
 
 import com.baomibing.authority.constant.PermActionConst;
-import com.baomibing.authority.constant.PermConnectConst;
 import com.baomibing.authority.constant.enums.PositionGroupEnum;
 import com.baomibing.authority.constant.enums.UserGroupEnum;
 import com.baomibing.authority.dto.*;
@@ -23,10 +38,12 @@ import com.baomibing.core.wrap.GroupIntervalWrap;
 import com.baomibing.orm.base.MBaseServiceImpl;
 import com.baomibing.tool.constant.RedisKeyConstant;
 import com.baomibing.tool.constant.Strings;
+import com.baomibing.tool.constant.enums.ProfileEnum;
 import com.baomibing.tool.util.Checker;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.google.common.collect.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -51,6 +68,15 @@ public class SysGroupServiceImpl extends MBaseServiceImpl<SysGroupMapper, SysGro
     @Autowired private SysUserPositionService userPositionService;
     @Autowired private SysUserRoleService userRoleService;
     @Autowired private SysUserUsetService userUsetService;
+    @Autowired private SysUserBusinessPermService userBusinessPermService;
+    @Autowired private SysUserColumnPermService userColumnPermService;
+    @Autowired private SysUserDataPermService userDataPermService;
+    @Autowired private SysUserEntrustService userEntrustService;
+    @Autowired private SysUserExceptEntrustService userExceptEntrustService;
+    @Autowired private SysGroupEntrustService groupEntrustService;
+    @Autowired private SysGroupExceptEntrustService groupExceptEntrustService;
+
+    @Value("${spring.profiles.active}") protected String profiles;
     
     /**
      * 获取子组织序列号的最大值
@@ -77,7 +103,7 @@ public class SysGroupServiceImpl extends MBaseServiceImpl<SysGroupMapper, SysGro
         List<GroupIntervalWrap> list = new ArrayList<>();
         if (Checker.beEmpty(groupList))
             return list;
-        Map<String, String> groupMap = groupList.stream().collect(Collectors.toMap(g -> g.getGlft() + "_" + g.getGrht(), g -> g.getId(), (v1, v2) -> v1));
+        Map<String, String> groupMap = groupList.stream().collect(Collectors.toMap(g -> g.getGlft() + "_" + g.getGrht(), GroupDto::getId, (v1, v2) -> v1));
         //闭区间求并集
         RangeSet<Integer> rs = TreeRangeSet.create();
         groupList.forEach(g -> rs.add(Range.closed(g.getGlft(), g.getGrht())));
@@ -157,7 +183,7 @@ public class SysGroupServiceImpl extends MBaseServiceImpl<SysGroupMapper, SysGro
     
     @Override
     @Transactional
-    public void doMoveGroupUsers(String ogid, String togid, Set<String> users) {
+    public void doMoveGroupUsers(String ogid, String togid, boolean beSyncUserPerm, Set<String> users) {
         Assert.CheckArgument(ogid, togid, users);
         List<UserDto> dbUsers = userService.gets(users);
         for (UserDto u : dbUsers) {
@@ -168,18 +194,24 @@ public class SysGroupServiceImpl extends MBaseServiceImpl<SysGroupMapper, SysGro
         userGroupService.deleteByGroupIdAndUsers(users, ogid);
         userPositionService.removePositionUsers(ogid, users);
         addUsersToGroup(users, togid);
-        //更新角色
-        List<UserRoleDto> urs =  userRoleService.listByGroupAndUsers(ogid, users);
-        urs.forEach(ur -> ur.setOrgId(togid));
-        if (Checker.beNotEmpty(urs)) {
-            userRoleService.updateItBatch(urs);
+
+        if (beSyncUserPerm) {
+            syncUserPermsByGroup(users, ogid, togid);
+        } else {
+            deleteUserPermsByGroup(users, ogid);
         }
-        //更新用户组
-        List<UserUsetDto> uus = userUsetService.listByGroupAndUsers(ogid, users);
-        uus.forEach(uu -> uu.setOrgId(togid));
-        if (Checker.beNotEmpty(uus)) {
-            userUsetService.updateItBatch(uus);
-        }
+//        //更新角色
+//        List<UserRoleDto> urs =  userRoleService.listByGroupAndUsers(ogid, users);
+//        urs.forEach(ur -> ur.setOrgId(togid));
+//        if (Checker.beNotEmpty(urs)) {
+//            userRoleService.updateItBatch(urs);
+//        }
+//        //更新用户组
+//        List<UserUsetDto> uus = userUsetService.listByGroupAndUsers(ogid, users);
+//        uus.forEach(uu -> uu.setOrgId(togid));
+//        if (Checker.beNotEmpty(uus)) {
+//            userUsetService.updateItBatch(uus);
+//        }
     }
     
     
@@ -323,12 +355,29 @@ public class SysGroupServiceImpl extends MBaseServiceImpl<SysGroupMapper, SysGro
         return mapper(baseMapper.selectList(lambdaQuery().eq(SysGroup::getBeDeleted, false)
         .likeRight(SysGroup::getId, gid)));
     }
-    
+
+    // 递归计算组织及其所有子组织包含的用户总数
+    private int calculateTotalUsers(List<CommonTreeWrap> list, Map<String, Integer> directUserCount) {
+        int number = 0;
+        for (CommonTreeWrap warp : list) {
+            int count = directUserCount.getOrDefault(warp.getKey(), 0);
+            if (UserGroupEnum.USER.name().equals(warp.getTag())) {
+                continue;
+            }
+            if (Checker.beNotEmpty(warp.getChildren())) {
+                count +=  calculateTotalUsers(warp.getChildren(), directUserCount);
+            }
+            warp.setTitle(warp.getTitle() + "(" + count + ")");
+            number = number + count;
+        }
+
+        return number;
+    }
     @Action(value = PermActionConst.GROUP_TREE_ALL_GROUPS_AND_USERS)
-    @ActionConnect(value = PermConnectConst.SELECT_LIST, groupAuthColumn = "id")
+    @ActionConnect(value = "listAllGroup", groupAuthColumn = "id")
     @Override
     public List<CommonTreeWrap> treeAllGroupsAndUsers() {
-        List<SysGroup> groups = baseMapper.selectList(lambdaQuery().isNotNull(SysGroup::getParentId));
+        List<SysGroup> groups = baseMapper.listAllGroup();//selectList(lambdaQuery().isNotNull(SysGroup::getParentId));
         List<UserDto> users = userService.listAllGroupUsers();
         
         List<CommonTreeWrap> tlist = Lists.newArrayList();
@@ -356,10 +405,11 @@ public class SysGroupServiceImpl extends MBaseServiceImpl<SysGroupMapper, SysGro
                 tlist.add(group);
             }
         });
-
+        Map<String, Integer> countMap = new HashMap<>();
         users.forEach(u -> {
             String pid = u.getGroupId();
             if (Checker.beNotNull(gMap.get(pid))) {
+                countMap.put(pid, countMap.getOrDefault(pid, 0) + 1);
                 CommonTreeWrap pGroup = gMap.get(pid);
                 if (Checker.beEmpty(pGroup.getChildren())) {
                     pGroup.setIsLeaf(false);
@@ -379,8 +429,9 @@ public class SysGroupServiceImpl extends MBaseServiceImpl<SysGroupMapper, SysGro
                         .setTitle(u.getUserRealCnName() + state).setParentId(pid).setParentGroupName(pGroup.getTitle()).setTag(UserGroupEnum.USER.name()).setIsLeaf(true));
             }
         });
-        
 
+
+        calculateTotalUsers(tlist, countMap);
         return tlist;
     }
 
@@ -415,9 +466,11 @@ public class SysGroupServiceImpl extends MBaseServiceImpl<SysGroupMapper, SysGro
             }
         });
 
+        Map<String, Integer> countMap = new HashMap<>();
         users.forEach(u -> {
             String pid = u.getGroupId();
             if (Checker.beNotNull(gMap.get(pid))) {
+                countMap.put(pid, countMap.getOrDefault(pid, 0) + 1);
                 CommonTreeWrap pGroup = gMap.get(pid);
                 if (Checker.beEmpty(pGroup.getChildren())) {
                     pGroup.setIsLeaf(false);
@@ -438,7 +491,7 @@ public class SysGroupServiceImpl extends MBaseServiceImpl<SysGroupMapper, SysGro
             }
         });
 
-
+        calculateTotalUsers(tlist, countMap);
         return tlist;
     }
 
@@ -536,6 +589,110 @@ public class SysGroupServiceImpl extends MBaseServiceImpl<SysGroupMapper, SysGro
         queryWrapper.select(SysGroup::getId, SysGroup::getGroupName);
         return mapper(super.baseMapper.selectList(queryWrapper));
     }
-    
-    
+
+    @Override
+    public void doCopyUserPerm(String uid, String gid, String toUserId) {
+        //云环境不允许 该操作
+        if (ProfileEnum.yun.name().equalsIgnoreCase(profiles)) {
+            throw new ServerRuntimeException(AuthorizationExceptionEnum.SAMPLE_ENVIRONMENT_NOT_SUPPORT_THE_OPERATION);
+        }
+        Assert.CheckArgument(uid);
+        Assert.CheckArgument(gid);
+        Assert.CheckArgument(toUserId);
+        List<UserGroupDto> userGroups = userGroupService.listByUser(toUserId);
+        Set<String> groupIds = userGroups.stream().map(UserGroupDto::getGroupId).collect(Collectors.toSet());
+        if (!groupIds.contains(gid)) {
+            throw new ServerRuntimeException(AuthorizationExceptionEnum.TWO_USERS_NOT_IN_THE_SAME_GROUP_CAN_NOT_COPY_AUTH);
+        }
+
+        userRoleService.doCopyUserRole(uid, gid, toUserId);
+        userUsetService.doCopyUserUset(uid, gid, toUserId);
+        userBusinessPermService.doCopyUserBusinessPerm(uid, gid, toUserId);
+        userColumnPermService.doCopyUserColumnPerms(uid, gid, toUserId);
+        userEntrustService.doCopyUserEntrusts(uid, gid, toUserId);
+        userExceptEntrustService.doCopyUserExceptEntrusts(uid, gid, toUserId);
+        groupEntrustService.doCopyUserGroupEntrusts(uid, gid, toUserId);
+        groupExceptEntrustService.doCopyUserExceptGroupEntrusts(uid, gid, toUserId);
+
+    }
+
+    @Override
+    public void deleteUserPermsByGroup(Set<String> users, String oldGroupId) {
+        //删除角色
+        userRoleService.deleteByGroupAndUsers(oldGroupId, users);
+        //删除用户组
+        userUsetService.deleteByGroupUsers(oldGroupId, users);
+        //删除用户业务权限
+        userBusinessPermService.deleteByGroupAndUsers(oldGroupId, users);
+        //删除用户列权限
+        userColumnPermService.deleteUserColumnPerms(oldGroupId, users);
+        //删除用户的数据权限
+        userDataPermService.deleteUserDataPerms(oldGroupId, users);
+        //删除用户委托信息
+        userEntrustService.deleteUserEntrusts(oldGroupId, users);
+        //删除用户组织委托
+        groupEntrustService.deleteUserGroupEntrusts(oldGroupId, users);
+        //删除用户排除的委托信息
+        userExceptEntrustService.deleteUserExceptEntrusts(oldGroupId, users);
+        //删除用户排除的组织委托信息
+        groupExceptEntrustService.deleteUserExceptGroupEntrusts(oldGroupId, users);
+    }
+
+    @Override
+    public void syncUserPermsByGroup(Set<String> users, String ogid, String togid) {
+        //更新角色
+        List<UserRoleDto> urs =  userRoleService.listByGroupAndUsers(ogid, users);
+        urs.forEach(ur -> ur.setOrgId(togid));
+        if (Checker.beNotEmpty(urs)) {
+            userRoleService.updateItBatch(urs);
+        }
+        //更新用户组
+        List<UserUsetDto> uus = userUsetService.listByGroupAndUsers(ogid, users);
+        uus.forEach(uu -> uu.setOrgId(togid));
+        if (Checker.beNotEmpty(uus)) {
+            userUsetService.updateItBatch(uus);
+        }
+        //更新用户业务权限
+        List<UserBusinessPermDto> ubps = userBusinessPermService.listUserBusinessPerms(users, ogid);
+        ubps.forEach(ubp -> ubp.setOrgId(togid));
+        if (Checker.beNotEmpty(ubps)) {
+            userBusinessPermService.updateItBatch(ubps);
+        }
+        //更新用户的列权限
+        List<UserColumnPermDto> ucps = userColumnPermService.listUserColumnPerms(users, ogid);
+        ucps.forEach(ucp -> ucp.setOrgId(togid));
+        if (Checker.beNotEmpty(ucps)) {
+            userColumnPermService.updateItBatch(ucps);
+        }
+        //更新用户数据权限
+        List<UserDataPermDto> udps = userDataPermService.listUserDataPerms(users, ogid);
+        udps.forEach(udp -> udp.setOrgId(togid));
+        if (Checker.beNotEmpty(udps)) {
+            userDataPermService.updateItBatch(udps);
+        }
+        //更新用户委托信息
+        List<UserEntrustDto> ues =  userEntrustService.listUserEntrusts(users, ogid);
+        ues.forEach(ue -> ue.setOrgId(togid));
+        if (Checker.beNotEmpty(ues)) {
+            userEntrustService.updateItBatch(ues);
+        }
+        //更新用户组织委托信息
+        List<GroupEntrustDto> ges = groupEntrustService.listUserGroupEntrusts(users, ogid);
+        ges.forEach(ge -> ge.setOrgId(togid));
+        if (Checker.beNotEmpty(ges)) {
+            groupEntrustService.updateItBatch(ges);
+        }
+        //更新用户排除的委托信息
+        List<UserExceptEntrustDto> uees = userExceptEntrustService.listUserExceptEntrusts(users, ogid);
+        uees.forEach(uee -> uee.setOrgId(togid));
+        if (Checker.beNotEmpty(uees)) {
+            userExceptEntrustService.updateItBatch(uees);
+        }
+        //更新用户排除的组织委托信息
+        List<GroupExceptEntrustDto> gees = groupExceptEntrustService.listUserGroupExceptEntrusts(users, ogid);
+        gees.forEach(gee -> gee.setOrgId(togid));
+        if (Checker.beNotEmpty(gees)) {
+            groupExceptEntrustService.updateItBatch(gees);
+        }
+    }
 }

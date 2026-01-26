@@ -1,6 +1,23 @@
 
+/*
+ * Copyright (c) 2020-2025, zening (316279828@qq.com).
+ * <p>
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy of
+ * the License at
+ * <p>
+ * https://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
+ */
+
 package com.baomibing.authority.service.impl;
 
+import com.baomibing.authority.constant.ParamConst;
 import com.baomibing.authority.dto.ParamDto;
 import com.baomibing.authority.entity.SysParam;
 import com.baomibing.authority.exception.AuthorizationExceptionEnum;
@@ -22,6 +39,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static com.baomibing.tool.constant.RedisKeyConstant.KEY_RULE_APPEND_SCRIPT;
+
 /**
  * 参数管理
  * 
@@ -37,6 +56,19 @@ public class SysParamServiceImpl extends MBaseServiceImpl<SysParamMapper, SysPar
 	public void saveParam(ParamDto dto) {
         assertParamRepeat(dto);
         super.saveIt(dto);
+        cacheRuleGroovyScript(dto);
+    }
+
+    private void cacheRuleGroovyScript(ParamDto dto) {
+        if (ParamConst.GROOVY_APPEND_SCRIPT.equals(dto.getParamCode())) {
+            cacheService.set(KEY_RULE_APPEND_SCRIPT, dto.getParamValue());
+        }
+    }
+
+    private void removeCacheRuleGroovyScript(ParamDto dto) {
+        if (ParamConst.GROOVY_APPEND_SCRIPT.equals(dto.getParamCode())) {
+            cacheService.del(KEY_RULE_APPEND_SCRIPT);
+        }
     }
 
     @Override
@@ -45,6 +77,7 @@ public class SysParamServiceImpl extends MBaseServiceImpl<SysParamMapper, SysPar
         ParamDto p = super.getIt(dto.getId());
         assertBeLock(p);
         super.updateIt(dto);
+        cacheRuleGroovyScript(dto);
     }
 
     @Override
@@ -70,6 +103,7 @@ public class SysParamServiceImpl extends MBaseServiceImpl<SysParamMapper, SysPar
         List<ParamDto> params = super.gets(Sets.newHashSet(ids));
         for (ParamDto p : params) {
             assertBeLock(p);
+            removeCacheRuleGroovyScript(p);
         }
         super.updateItBatch(dtos);
         //redis删除系统参数

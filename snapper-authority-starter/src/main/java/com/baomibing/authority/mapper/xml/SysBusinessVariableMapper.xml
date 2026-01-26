@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright (c) 2020-2025, zening (316279828@qq.com).
+  ~ <p>
+  ~ Licensed under the Apache License, Version 2.0 (the "License"); you may not
+  ~ use this file except in compliance with the License. You may obtain a copy of
+  ~ the License at
+  ~ <p>
+  ~ https://www.apache.org/licenses/LICENSE-2.0
+  ~ <p>
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+  ~ WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+  ~ License for the specific language governing permissions and limitations under
+  ~ the License.
+  -->
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.baomibing.authority.mapper.SysBusinessVariableMapper">
+
+
+    <select id="listAllParentByCode" resultType="java.lang.String">
+        SELECT CONCAT_WS(',', m1.id, m2.id, m3.id, m4.id, m5.id, m6.id) as parent_id
+        FROM sys_business_variable m1
+                 LEFT JOIN sys_business_variable m2 on m2.parent_id = m1.id
+                 LEFT JOIN sys_business_variable m3 on m3.parent_id = m2.id
+                 LEFT JOIN sys_business_variable m4 on m4.parent_id = m3.id
+                 LEFT JOIN sys_business_variable m5 on m5.parent_id = m4.id
+                 LEFT JOIN sys_business_variable m6 on m6.parent_id = m5.id
+        WHERE m1.code = #{code}
+          and m1.parent_id is null
+          and m1.be_used = 1
+    </select>
+
+    <select id="listAllParentByIds" resultType="java.lang.String">
+        SELECT CONCAT_WS(',',m1.id,m2.id,m3.id,m4.id,m5.id,m6.id) as parent_id
+        FROM sys_business_variable m1
+        LEFT JOIN sys_business_variable m2 on m2.parent_id = m1.id
+        LEFT JOIN sys_business_variable m3 on m3.parent_id = m2.id
+        LEFT JOIN sys_business_variable m4 on m4.parent_id = m3.id
+        LEFT JOIN sys_business_variable m5 on m5.parent_id = m4.id
+        LEFT JOIN sys_business_variable m6 on m6.parent_id = m5.id
+        WHERE m1.id in
+        <foreach collection="ids" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="listByCodeOrName" resultType="com.baomibing.authority.entity.SysBusinessVariable">
+        SELECT id,code,name
+        FROM sys_business_variable v
+        WHERE v.be_used = 1 and v.parent_id is null
+        <choose>
+            <when test="codeOrName != null and codeOrName !='' ">
+                AND (code LIKE CONCAT('%',#{codeOrName},'%')
+                OR name LIKE CONCAT('%',#{codeOrName},'%'))
+                ORDER BY length(REPLACE(code,#{codeOrName},''))/length(code),
+                length(REPLACE(name,#{codeOrName},''))/length(name)
+            </when>
+        </choose>
+        LIMIT 10
+    </select>
+</mapper>

@@ -1,8 +1,17 @@
-/**
- * Copyright (c) 2018-2025, zening (316279828@qq.com).
+/*
+ * Copyright (c) 2020-2025, zening (316279828@qq.com).
  * <p>
- * Any unauthorised copying, selling, transferring, distributing, transmitting, renting,
- * or modifying of the Software is considered an infringement.
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy of
+ * the License at
+ * <p>
+ * https://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
  */
 package com.baomibing.core.wrap;
 
@@ -44,6 +53,10 @@ public class AdvanceSearchWrap {
     private String column;
 
     private String condition;
+
+    private String leftBro;
+
+    private String rightBro;
 
     //date, datetime
     private String dataType;
@@ -197,7 +210,9 @@ public class AdvanceSearchWrap {
             conditionSql = conditionOperator.getSql();
         }
 
-        return andOrSql + column + conditionSql + (beHasIn ? Strings.LEFT_BRACKET + displayValue(targetValue) + Strings.RIGHT_BRACKET : displayValue(targetValue));
+        String leftBracket = Checker.beNotEmpty(leftBro) ? Strings.LEFT_BRACKET : Strings.EMPTY;
+        String rightBracket = Checker.beNotEmpty(rightBro) ? Strings.RIGHT_BRACKET : Strings.EMPTY;
+        return andOrSql + leftBracket +  column + conditionSql + (beHasIn ? Strings.LEFT_BRACKET + displayValue(targetValue) + Strings.RIGHT_BRACKET : displayValue(targetValue)) + rightBracket;
     }
 
     private static boolean beSqlInValid(String sql) {

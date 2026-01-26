@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright (c) 2020-2025, zening (316279828@qq.com).
+  ~ <p>
+  ~ Licensed under the Apache License, Version 2.0 (the "License"); you may not
+  ~ use this file except in compliance with the License. You may obtain a copy of
+  ~ the License at
+  ~ <p>
+  ~ https://www.apache.org/licenses/LICENSE-2.0
+  ~ <p>
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+  ~ WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+  ~ License for the specific language governing permissions and limitations under
+  ~ the License.
+  -->
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.baomibing.authority.mapper.SysHmacUserMapper">
+
+    <!-- 获取所有hmac用户列表 -->
+    <select id="listForCache" resultType="com.baomibing.authority.entity.SysHmacUser">
+        SELECT smac.id, smac.user_id, smac.`state`, smac.app_id, smac.app_key,
+               smac.expire_date, smac.system_name, smac.white_ips,smac.bind_type,
+               su.user_no,su.user_tag,su.user_real_cn_name,su.user_real_en_name,
+               upost.position_id,c.group_id,c.group_name,smac.org_id,g.group_name as org_name,
+               CONCAT_WS(',',GROUP_CONCAT(ur.role_id),GROUP_CONCAT(utr.role_id),GROUP_CONCAT(pr.role_id)) as role_ids
+        FROM sys_hmac_user smac
+        INNER JOIN sys_user su ON smac.user_id = su.id
+        LEFT JOIN sys_user_uset uuset ON uuset.user_id = su.id and uuset.org_id = smac.org_id
+        LEFT JOIN sys_user_position upost ON upost.user_id = su.id and upost.group_id = smac.org_id
+        LEFT JOIN sys_user_role ur ON ur.user_id = su.id and smac.org_id = ur.org_id
+        LEFT JOIN sys_uset_role utr ON utr.uset_id = uuset.uset_id
+        LEFT JOIN sys_position_role pr ON pr.position_id = upost.position_id
+        LEFT JOIN sys_group c ON smac.org_id LIKE CONCAT(c.id, '%') AND c.group_level = 1
+        LEFT JOIN sys_group g ON g.id = smac.org_id
+        <where>
+            smac.bind_type = 'user'
+            <if test="ids != null and ids.size() > 0">
+                AND smac.id in
+                <foreach collection="ids" index="index" item="item" open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
+        </where>
+        GROUP by smac.id, smac.user_id, smac.`state`, smac.app_id, smac.app_key,
+                 su.user_no,su.user_tag,su.user_real_cn_name,su.user_real_en_name,smac.org_id,
+                 smac.expire_date, smac.system_name, smac.white_ips, upost.position_id,
+                 c.group_id,c.group_name,g.group_name
+	</select>
+
+    <!-- 获取所有hmac用户列表 -->
+    <select id="listForTenantCache" resultType="com.baomibing.authority.entity.SysHmacUser">
+        SELECT smac.id, smac.user_id, smac.`state`, smac.app_id, smac.app_key,smac.tenant_id,
+        smac.expire_date, smac.system_name, smac.white_ips,smac.bind_type,smac.tenant_name,
+        su.user_no,su.user_tag,su.user_real_cn_name,su.user_real_en_name,
+        upost.position_id,c.id as group_id,c.group_name,g.id as org_id,g.group_name as org_name,
+        CONCAT_WS(',',GROUP_CONCAT(ur.role_id),GROUP_CONCAT(utr.role_id),GROUP_CONCAT(pr.role_id)) as role_ids
+        FROM sys_hmac_user smac
+        INNER JOIN sys_tenant st ON smac.tenant_id = st.id
+        INNER JOIN sys_tenant_user su ON st.id = su.tenant_id and su.id = smac.user_id
+        INNER JOIN sys_tenant_user_group tug on tug.user_id = su.id and tug.tenant_id = st.id and tug.group_id = smac.org_id
+        LEFT JOIN sys_tenant_group g ON g.id = tug.group_id and g.tenant_id = st.id
+        LEFT JOIN sys_tenant_user_uset uuset ON uuset.user_id = su.id and uuset.org_id = tug.group_id and uuset.tenant_id = st.id
+        LEFT JOIN sys_tenant_user_position upost ON upost.user_id = su.id and upost.group_id = tug.group_id and upost.tenant_id = st.id
+        LEFT JOIN sys_tenant_user_role ur ON ur.user_id = su.id and tug.group_id = ur.org_id and st.id = ur.tenant_id
+        LEFT JOIN sys_tenant_uset_role utr ON utr.uset_id = uuset.uset_id and utr.tenant_id = st.id
+        LEFT JOIN sys_tenant_position_role pr ON pr.position_id = upost.position_id and pr.tenant_id = st.id
+        LEFT JOIN sys_tenant_group c ON tug.group_id LIKE CONCAT(c.id, '%') AND c.group_level = 2
+
+        <where>
+            smac.bind_type = 'tenant'
+            <if test="ids != null and ids.size() > 0">
+                AND smac.id in
+                <foreach collection="ids" index="index" item="item" open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
+        </where>
+        GROUP by smac.id, smac.user_id, smac.`state`, smac.app_id, smac.app_key,
+        su.user_no,su.user_tag,su.user_real_cn_name,su.user_real_en_name,g.id,
+        smac.expire_date, smac.system_name, smac.white_ips, upost.position_id,
+        c.id,c.group_name,g.group_name
+    </select>
+
+    <select id="searchHamcUser" resultType="com.baomibing.authority.entity.SysHmacUser">
+        SELECT smac.id, smac.user_id, smac.`state`, smac.app_id, smac.app_key,
+               smac.expire_date, smac.system_name, smac.white_ips, smac.note,
+            ifnull(su.user_real_cn_name,stu.user_real_cn_name) as bind_user, smac.tenant_name,
+            smac.create_time,smac.org_id,smac.bind_type,smac.create_user_cn_name
+        FROM sys_hmac_user smac
+        LEFT JOIN sys_user su ON smac.user_id = su.id and smac.bind_type='user'
+        LEFT JOIN sys_tenant tu on smac.tenant_id = tu.id and smac.bind_type='tenant'
+        LEFT JOIN sys_tenant_user stu ON smac.user_id = stu.id and stu.tenant_id = tu.id
+        <where>
+            <if test="systemName != null and systemName != ''">
+                AND smac.system_name LIKE CONCAT('%',#{systemName,jdbcType=CHAR},'%')
+            </if>
+            <if test="appId != null and appId != ''">
+                AND smac.app_id LIKE CONCAT('%',#{appId,jdbcType=CHAR},'%')
+            </if>
+            <if test="userId != null and userId != ''">
+                AND smac.user_id = #{userId,jdbcType=CHAR}
+            </if>
+            <if test="bindType != null and bindType != ''">
+                AND smac.bind_type = #{bindType,jdbcType=CHAR}
+            </if>
+        </where>
+        ORDER BY smac.create_time desc
+        LIMIT #{offset,jdbcType=INTEGER}, #{limit,jdbcType=INTEGER}
+    </select>
+
+    <select id="countHmacUser" resultType="java.lang.Integer">
+        SELECT count(1)
+        FROM sys_hmac_user smac
+        <where>
+            <if test="systemName != null and systemName != ''">
+                AND smac.system_name LIKE CONCAT('%',#{systemName,jdbcType=CHAR},'%')
+            </if>
+            <if test="appId != null and appId != ''">
+                AND smac.app_id LIKE CONCAT('%',#{appId,jdbcType=CHAR},'%')
+            </if>
+            <if test="userId != null and userId != ''">
+                AND smac.user_id = #{userId,jdbcType=CHAR}
+            </if>
+            <if test="bindType != null and bindType != ''">
+                AND smac.bind_type = #{bindType,jdbcType=CHAR}
+            </if>
+        </where>
+    </select>
+
+    <!--  根据ID获取HMAC用户-关联用户获取用户账号  -->
+    <select id="getHmacUser" resultType="com.baomibing.authority.entity.SysHmacUser">
+        SELECT smac.id, smac.user_id, smac.`state`, smac.app_id, smac.app_key,
+               smac.expire_date, smac.system_name, smac.white_ips, smac.note,
+               ifnull(su.user_real_cn_name,stu.user_real_cn_name) as bind_user, smac.tenant_id,smac.tenant_name, smac.create_time,smac.org_id,smac.bind_type
+        FROM sys_hmac_user smac
+        LEFT JOIN sys_user su ON smac.user_id = su.id and smac.bind_type='user'
+        LEFT JOIN sys_tenant tu on smac.tenant_id = tu.id and smac.bind_type='tenant'
+        LEFT JOIN sys_tenant_user stu ON smac.user_id = stu.id and stu.tenant_id = tu.id
+        WHERE smac.id = #{id}
+    </select>
+
+</mapper>
